@@ -17,7 +17,6 @@ package polkadot
 
 import (
 	"errors"
-	"github.com/astaxie/beego/config"
 	"path/filepath"
 
 	"github.com/blocktree/openwallet/v2/common"
@@ -141,7 +140,7 @@ func (wm *WalletManager) GetAddressNonce(wrapper openwallet.WalletDAI, account *
 
 	nonce_onchain = account.Nonce
 
-	wm.Log.Info(account.Address, " get nonce : ", nonce, ", nonce_onchain : ", nonce_onchain)
+	wm.Log.Debug(account.Address, " get nonce : ", nonce, ", nonce_onchain : ", nonce_onchain)
 
 	//如果本地nonce_db > 链上nonce,采用本地nonce,否则采用链上nonce
 	if nonce > nonce_onchain {
@@ -157,37 +156,9 @@ func (wm *WalletManager) GetAddressNonce(wrapper openwallet.WalletDAI, account *
 // UpdateAddressNonce
 func (wm *WalletManager) UpdateAddressNonce(wrapper openwallet.WalletDAI, address string, nonce uint64) {
 	key := wm.Symbol() + "-nonce"
-	wm.Log.Info(address, " set nonce ", nonce)
+	wm.Log.Debug(address, " set nonce ", nonce)
 	err := wrapper.SetAddressExtParam(address, key, nonce)
 	if err != nil {
 		wm.Log.Errorf("WalletDAI SetAddressExtParam failed, err: %v", err)
 	}
-}
-
-//LoadAssetsConfig 加载外部配置
-func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
-
-	wm.Config.NodeAPI = c.String("nodeAPI")
-	wm.Config.WSAPI = c.String("wsAPI")
-	wm.Config.APIChoose = c.String("apiChoose")
-	//if wm.Config.APIChoose == "rpc" {
-	//	wm.Client = NewClient(wm.Config.NodeAPI, false)
-	//}else if wm.Config.APIChoose == "ws" {
-	//	wm.WSClient = NewWSClient(wm, wm.Config.WSAPI, 0, false)
-	//}
-	NewApiClient(wm)
-
-	wm.Config.FixedFee, _ = c.Int64("fixedFee")
-	wm.Config.ReserveAmount, _ = c.Int64("reserveAmount")
-	wm.Config.IgnoreReserve, _ = c.Bool("ignoreReserve")
-	wm.Config.LastLedgerSequenceNumber, _ = c.Int64("lastLedgerSequenceNumber")
-	wm.Config.DataDir = c.String("dataDir")
-
-	wm.Config.MemoType = c.String("memoType")
-	wm.Config.MemoFormat = c.String("memoFormat")
-	wm.Config.MemoScan = c.String("memoScan")
-	//数据文件夹
-	wm.Config.makeDataDir()
-
-	return nil
 }

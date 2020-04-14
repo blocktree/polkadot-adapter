@@ -141,3 +141,28 @@ func (wm *WalletManager) GetAssetsLogger() *log.OWLogger {
 func (wm *WalletManager) GetSmartContractDecoder() openwallet.SmartContractDecoder {
 	return wm.ContractDecoder
 }
+
+//LoadAssetsConfig 加载外部配置
+func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
+
+	wm.Config.NodeAPI = c.String("nodeAPI")
+	wm.Config.WSAPI = c.String("wsAPI")
+	wm.Config.APIChoose = c.String("apiChoose")
+	//if wm.Config.APIChoose == "rpc" {
+	//	wm.Client = NewClient(wm.Config.NodeAPI, false)
+	//}else if wm.Config.APIChoose == "ws" {
+	//	wm.WSClient = NewWSClient(wm, wm.Config.WSAPI, 0, false)
+	//}
+	NewApiClient(wm)
+
+	wm.Config.FixedFee, _ = c.Int64("fixedFee")
+	wm.Config.ReserveAmount, _ = c.Int64("reserveAmount")
+	wm.Config.IgnoreReserve, _ = c.Bool("ignoreReserve")
+	wm.Config.DataDir = c.String("dataDir")
+
+	//数据文件夹
+	wm.Config.makeDataDir()
+
+	return nil
+}
+

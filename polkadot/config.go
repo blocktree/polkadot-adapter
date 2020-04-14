@@ -31,8 +31,8 @@ const (
 	Symbol    = "DOT"
 	MasterKey = "Polkadot seed"
 	CurveType = owcrypt.ECC_CURVE_ED25519
-	GenesisHash = "b0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe-正式"
-	SpecVersion =  1055444
+	GenesisHash = "b0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe"
+	SpecVersion =  1055
 )
 
 type WalletConfig struct {
@@ -40,13 +40,6 @@ type WalletConfig struct {
 	//币种
 	Symbol    string
 	MasterKey string
-
-	//RPC认证账户名
-	RpcUser string
-	//RPC认证账户密码
-	RpcPassword string
-	//证书目录
-	CertsDir string
 	//钥匙备份路径
 	keyDir string
 	//地址导出路径
@@ -55,22 +48,10 @@ type WalletConfig struct {
 	configFilePath string
 	//配置文件名
 	configFileName string
-	//rpc证书
-	CertFileName string
-	//区块链数据文件
-	//BlockchainFile string
-	//是否测试网络
-	IsTestNet bool
-	// 核心钱包是否只做监听
-	CoreWalletWatchOnly bool
-	//最大的输入数量
-	MaxTxInputs int
 	//本地数据库文件路径
 	dbPath string
 	//备份路径
 	backupDir string
-	//钱包服务API
-	ServerAPI string
 	// node API
 	NodeAPI string
 	// websocket API
@@ -93,24 +74,14 @@ type WalletConfig struct {
 	CurveType uint32
 	//小数位长度
 	CoinDecimal decimal.Decimal
-	//核心钱包密码，配置有值用于自动解锁钱包
-	WalletPassword string
 	//fixed fee in sawi
 	FixedFee int64
 	// reserve amount in smallest unit
 	ReserveAmount int64
 	// ignore reserve amount or not
 	IgnoreReserve bool
-	// last ledger sequence number
-	LastLedgerSequenceNumber int64
 	// data directory
 	DataDir string
-	// memo type
-	MemoType string
-	// memo format
-	MemoFormat string
-	// which feild of memo to scan
-	MemoScan string
 
 	GenesisHash string
 
@@ -128,38 +99,18 @@ func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion 
 	c.GenesisHash = GenesisHash
 	c.SpecVersion = SpecVersion
 
-	//RPC认证账户名
-	c.RpcUser = ""
-	//RPC认证账户密码
-	c.RpcPassword = ""
-	//证书目录
-	c.CertsDir = filepath.Join("data", strings.ToLower(c.Symbol), "certs")
 	//钥匙备份路径
 	c.keyDir = filepath.Join("data", strings.ToLower(c.Symbol), "key")
 	//地址导出路径
 	c.addressDir = filepath.Join("data", strings.ToLower(c.Symbol), "address")
-	//区块链数据
-	//blockchainDir = filepath.Join("data", strings.ToLower(Symbol), "blockchain")
 	//配置文件路径
 	c.configFilePath = filepath.Join("conf")
 	//配置文件名
 	c.configFileName = c.Symbol + ".ini"
-	//rpc证书
-	c.CertFileName = "rpc.cert"
-	//区块链数据文件
-	//c.BlockchainFile = "blockchain.db"
-	//是否测试网络
-	c.IsTestNet = false
-	// 核心钱包是否只做监听
-	c.CoreWalletWatchOnly = true
-	//最大的输入数量
-	c.MaxTxInputs = 50
 	//本地数据库文件路径
 	c.dbPath = filepath.Join("data", strings.ToLower(c.Symbol), "db")
 	//备份路径
 	c.backupDir = filepath.Join("data", strings.ToLower(c.Symbol), "backup")
-	//钱包服务API
-	c.ServerAPI = "http://127.0.0.1:9922"
 	//钱包安装的路径
 	c.NodeInstallPath = ""
 	//钱包数据文件目录
@@ -172,8 +123,6 @@ func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion 
 	c.CycleSeconds = time.Second * 10
 	//小数位长度
 	c.CoinDecimal = decimal.NewFromFloat(100000000)
-	//核心钱包密码，配置有值用于自动解锁钱包
-	c.WalletPassword = ""
 
 	//默认配置内容
 	c.DefaultConfig = `
