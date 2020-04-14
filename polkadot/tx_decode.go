@@ -121,16 +121,6 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	addressesBalanceList := make([]AddrBalance, 0, len(addresses))
 
 	for i, addr := range addresses {
-		//var (
-		//	balance *AddrBalance
-		//)
-		//if decoder.wm.Config.APIChoose == "rpc" {
-		//	balance, err = decoder.wm.Client.getBalance(addr.Address,decoder.wm.Config.IgnoreReserve,decoder.wm.Config.ReserveAmount)
-		//} else if decoder.wm.Config.APIChoose == "ws"{
-		//	balance, err = decoder.wm.WSClient.getBalance(addr.Address,decoder.wm.Config.IgnoreReserve,decoder.wm.Config.ReserveAmount)
-		//} else {
-		//	return errors.New("Invalid config, check the ini file!")
-		//}
 		balance, err := decoder.wm.ApiClient.getBalance(addr.Address,decoder.wm.Config.IgnoreReserve,decoder.wm.Config.ReserveAmount)
 		if err != nil {
 			return err
@@ -186,15 +176,6 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	rawTx.TxAmount = amountStr
 	rawTx.Fees = strconv.FormatUint(fee, 10)
 	rawTx.FeeRate = strconv.FormatUint(fee, 10)
-
-	//var mostHeightBlock *Block
-	//if decoder.wm.Config.APIChoose == "rpc" {
-	//	mostHeightBlock, err = decoder.wm.Client.getMostHeightBlock()
-	//}else if decoder.wm.Config.APIChoose == "ws" {
-	//	//mostHeightBlock, err = decoder.wm.WSClient.getBlockHeight()
-	//}else {
-	//	return errors.New("Invalid config, check the ini file!")
-	//}
 
 	mostHeightBlock, err := decoder.wm.ApiClient.getMostHeightBlock()
 	if err != nil {
@@ -441,7 +422,6 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 	}
 
 	amount := uint64(convertFromAmount(amountStr))
-	//amount = amount.Add(amount, big.NewInt(int64(fee)))
 	from := addrBalance.Address
 	fromAddr, err := wrapper.GetAddress(from)
 	if err != nil {
@@ -454,14 +434,6 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 	rawTx.Fees = strconv.FormatUint(fee, 10)
 	rawTx.FeeRate = strconv.FormatUint(fee, 10)
 
-	//var addrNodeBalance *AddrBalance
-	//if decoder.wm.Config.APIChoose == "rpc" {
-	//	addrNodeBalance, err = decoder.wm.Client.getBalance(from, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
-	//}else if decoder.wm.Config.APIChoose == "ws" {
-	//	addrNodeBalance, err = decoder.wm.WSClient.getBalance(from, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
-	//}else {
-	//	return errors.New("Invalid config, check the ini file!")
-	//}
 	addrNodeBalance, err := decoder.wm.ApiClient.getBalance(from, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
 	if err != nil {
 		return errors.New("Failed to get nonce when create summay transaction!")
@@ -478,18 +450,6 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 	nonceJSON[from] = nonce
 
 	rawTx.SetExtParam("nonce", nonceJSON)
-
-	//var mostHeightBlock *Block
-	//if decoder.wm.Config.APIChoose == "rpc" {
-	//	mostHeightBlock, err = decoder.wm.Client.getMostHeightBlock()
-	//}else if decoder.wm.Config.APIChoose == "ws" {
-	//	//mostHeightBlock, err = decoder.wm.WSClient.getBlockHeight()
-	//}else {
-	//	return errors.New("Invalid config, check the ini file!")
-	//}
-	//if err != nil {
-	//	return errors.New("Failed to get block height when create summay transaction!")
-	//}
 
 	mostHeightBlock, err := decoder.wm.ApiClient.getMostHeightBlock()
 	if err != nil {

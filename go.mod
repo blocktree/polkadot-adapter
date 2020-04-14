@@ -17,5 +17,3 @@ require (
 	github.com/shopspring/decimal v0.0.0-20200105231215-408a2507e114
 	github.com/tidwall/gjson v1.3.5
 )
-
-// replace github.com/blocktree/go-owcdrivers => /Users/zb/go/src/github.com/blocktree/go-owcdrivers

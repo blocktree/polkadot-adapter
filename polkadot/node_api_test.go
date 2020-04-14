@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	testNodeAPI = "http://47.75.78.127:20061"
-	//testNodeAPI = "http://127.0.0.1:8080"
+	testNodeAPI = "http://127.0.0.1:8080"
 )
 
 func PrintJsonLog(t *testing.T, logCont string){

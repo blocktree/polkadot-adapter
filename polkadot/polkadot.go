@@ -148,11 +148,6 @@ func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
 	wm.Config.NodeAPI = c.String("nodeAPI")
 	wm.Config.WSAPI = c.String("wsAPI")
 	wm.Config.APIChoose = c.String("apiChoose")
-	//if wm.Config.APIChoose == "rpc" {
-	//	wm.Client = NewClient(wm.Config.NodeAPI, false)
-	//}else if wm.Config.APIChoose == "ws" {
-	//	wm.WSClient = NewWSClient(wm, wm.Config.WSAPI, 0, false)
-	//}
 	NewApiClient(wm)
 
 	wm.Config.FixedFee, _ = c.Int64("fixedFee")

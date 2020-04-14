@@ -242,7 +242,7 @@ func TestONTBlockScanner_GetTransactionsByAddress(t *testing.T) {
 // func Test_tmp(t *testing.T) {
 // 	addr := "AYmuoVvtCojm1F3ATMf2fNww3wBNvAxbi5"
 // 	params := []interface{}{addr}
-// 	//c := NewRpcClient("http://47.75.78.16:20006")
+// 	//c := NewRpcClient("http://1.1.1.1:12345")
 // 	c := NewRpcClient("http://192.168.27.124:20336")
 
 // 	txid, err := c.sendRpcRequest("0", "getbalance", params)

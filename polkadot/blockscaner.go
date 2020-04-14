@@ -84,13 +84,6 @@ func (bs *DOTBlockScanner) SetRescanBlockHeight(height uint64) error {
 		return errors.New("block height to rescan must greater than 0.")
 	}
 
-	//var localBlock *Block
-	//var err error
-	//if bs.wm.Config.APIChoose == "ws" {
-	//	localBlock, err = bs.wm.WSClient.getBlockByHeight(height)
-	//} else {
-	//	localBlock, err = bs.wm.Client.getBlockByHeight(height)
-	//}
 	localBlock, err := bs.wm.ApiClient.getBlockByHeight(height)
 
 	if err!=nil{
@@ -141,14 +134,6 @@ func (bs *DOTBlockScanner) ScanBlockTask() {
 		currentHeight = currentHeight + 1
 		bs.wm.Log.Std.Info("block scanner scanning height: %d ...", currentHeight)
 
-		//var localBlock *Block
-		//if bs.wm.Config.APIChoose == "rpc" {
-		//	localBlock, err = bs.wm.Client.getBlockByHeight(currentHeight)
-		//} else if bs.wm.Config.APIChoose == "ws" {
-		//	localBlock, err = bs.wm.WSClient.getBlockByHeight(currentHeight)
-		//}else {
-		//	bs.wm.Log.Std.Info("Invalid config, check the ini file!")
-		//}
 		localBlock, err := bs.wm.ApiClient.getBlockByHeight(currentHeight)
 		if err != nil {
 			bs.wm.Log.Std.Info("getBlockByHeight failed; unexpected error: %v", err)
@@ -184,13 +169,6 @@ func (bs *DOTBlockScanner) ScanBlockTask() {
 				//查找core钱包的RPC
 				bs.wm.Log.Info("block scanner prev block height:", currentHeight)
 
-				//if bs.wm.Config.APIChoose == "rpc" {
-				//	localBlock, err = bs.wm.Client.getBlockByHeight(currentHeight)
-				//} else if bs.wm.Config.APIChoose == "ws" {
-				//	localBlock, err = bs.wm.WSClient.getBlockByHeight(currentHeight)
-				//}else {
-				//	bs.wm.Log.Std.Info("Invalid config, check the ini file!")
-				//}
 				localBlock, err = bs.wm.ApiClient.getBlockByHeight(currentHeight)
 				if err != nil {
 					bs.wm.Log.Std.Error("block scanner can not get prev block; unexpected error: %v", err)
@@ -264,17 +242,6 @@ func (bs *DOTBlockScanner) ScanBlock(height uint64) error {
 }
 
 func (bs *DOTBlockScanner) scanBlock(height uint64) (*Block,error) {
-	//var (
-	//	block *Block
-	//	err error
-	//)
-	//if bs.wm.Config.APIChoose == "rpc" {
-	//	block, err = bs.wm.Client.getBlockByHeight(height)
-	//} else if bs.wm.Config.APIChoose == "ws" {
-	//	block, err = bs.wm.WSClient.getBlockByHeight(height)
-	//}else {
-	//	return nil, errors.New("Invalid config, check the ini file!")
-	//}
 	block, err := bs.wm.ApiClient.getBlockByHeight(height)
 	if err != nil {
 		bs.wm.Log.Std.Info("block scanner can not get new block data; unexpected error: %v", err)
@@ -758,14 +725,6 @@ func (bs *DOTBlockScanner) GetCurrentBlockHeader() (*openwallet.BlockHeader, err
 	if err != nil {
 		return nil, err
 	}
-	//var block *Block
-	//if bs.wm.Config.APIChoose == "rpc" {
-	//	block, err = bs.wm.Client.getBlockByHeight(blockHeight)
-	//} else if bs.wm.Config.APIChoose == "ws" {
-	//	block, err = bs.wm.WSClient.getBlockByHeight(blockHeight)
-	//}else {
-	//	return nil, errors.New("Invalid config, check the ini file!")
-	//}
 
 	block, err := bs.wm.ApiClient.getBlockByHeight(blockHeight)
 	if err != nil {
@@ -801,14 +760,6 @@ func (bs *DOTBlockScanner) GetScannedBlockHeader() (*openwallet.BlockHeader, err
 
 		//就上一个区块链为当前区块
 		blockHeight = blockHeight - 1
-		//var block *Block
-		//if bs.wm.Config.APIChoose == "rpc" {
-		//	block, err = bs.wm.Client.getBlockByHeight(blockHeight)
-		//} else if bs.wm.Config.APIChoose == "ws" {
-		//	block, err = bs.wm.WSClient.getBlockByHeight(blockHeight)
-		//}else {
-		//	return nil, errors.New("Invalid config, check the ini file!")
-		//}
 		block, err := bs.wm.ApiClient.getBlockByHeight(blockHeight)
 		if err != nil {
 			bs.wm.Log.Errorf("get block spec by block number failed, err=%v", err)
@@ -980,18 +931,6 @@ func (bs *DOTBlockScanner) GetBalanceByAddress(address ...string) ([]*openwallet
 	addrsBalance := make([]*openwallet.Balance, 0)
 
 	for _, addr := range address {
-		//var (
-		//	balance *AddrBalance
-		//	err error
-		//)
-		//
-		//if bs.wm.Config.APIChoose == "rpc" {
-		//	balance, err = bs.wm.Client.getBalance(addr,bs.wm.Config.IgnoreReserve,bs.wm.Config.ReserveAmount)
-		//} else if bs.wm.Config.APIChoose == "ws"{
-		//	balance, err = bs.wm.WSClient.getBalance(addr,bs.wm.Config.IgnoreReserve,bs.wm.Config.ReserveAmount)
-		//} else {
-		//	return nil, errors.New("Invalid config, check the ini file!")
-		//}
 
 		balance, err := bs.wm.ApiClient.getBalance(addr,bs.wm.Config.IgnoreReserve,bs.wm.Config.ReserveAmount)
 

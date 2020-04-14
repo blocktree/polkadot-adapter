@@ -100,17 +100,6 @@ func (wm *WalletManager) SendRawTransaction(txHex string) (string, error) {
 }
 
 func (wm *WalletManager) sendRawTransactionByNode(txHex string) (string, error) {
-	//var (
-	//	txid string
-	//	err error
-	//)
-	//if wm.Config.APIChoose == "rpc" {
-	//	txid, err = wm.Client.sendTransaction(txHex)
-	//} else if wm.Config.APIChoose == "ws" {
-	//	txid, err = wm.WSClient.sendTransaction(txHex)
-	//}else {
-	//	return "",errors.New("Invalid config, check the ini file!")
-	//}
 	txid, err := wm.ApiClient.sendTransaction(txHex)
 
 	if err != nil {

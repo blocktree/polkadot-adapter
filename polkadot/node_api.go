@@ -16,9 +16,7 @@
 package polkadot
 
 import (
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"github.com/blocktree/openwallet/v2/log"
 	"github.com/imroc/req"
 	"github.com/tidwall/gjson"
@@ -40,7 +38,6 @@ type Client struct {
 	AccessToken string
 	Debug       bool
 	client      *req.Req
-	//Client *req.Req
 }
 
 type Response struct {
@@ -66,116 +63,11 @@ func NewClient(url string /*token string,*/, debug bool) *Client {
 	return &c
 }
 
-// Call calls a remote procedure on another node, specified by the path.
-func (c *Client) Call(path string, request []interface{}) (*gjson.Result, error) {
-
-	var (
-		body = make(map[string]interface{}, 0)
-	)
-
-	if c.client == nil {
-		return nil, errors.New("API url is not setup. ")
-	}
-
-	authHeader := req.Header{
-		"Accept":        "application/json",
-		"Authorization": "Basic " + c.AccessToken,
-	}
-
-	//json-rpc
-	body["jsonrpc"] = "2.0"
-	body["id"] = "curltext"
-	body["method"] = path
-	body["params"] = request
-
-	if c.Debug {
-		log.Std.Info("Start Request API...")
-	}
-
-	r, err := c.client.Post(c.BaseURL, req.BodyJSON(&body), authHeader)
-
-	if c.Debug {
-		log.Std.Info("Request API Completed")
-	}
-
-	if c.Debug {
-		log.Std.Info("%+v", r)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	resp := gjson.ParseBytes(r.Bytes())
-	err = isError(&resp)
-	if err != nil {
-		return nil, err
-	}
-
-	result := resp.Get("result")
-
-	return &result, nil
-}
-
-// See 2 (end of page 4) http://www.ietf.org/rfc/rfc2617.txt
-// "To receive authorization, the client sends the userid and password,
-// separated by a single colon (":") character, within a base64
-// encoded string in the credentials."
-// It is not meant to be urlencoded.
-func BasicAuth(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
-
-	//return username + ":" + password
-}
-
-//isError 是否报错
-func isError(result *gjson.Result) error {
-	var (
-		err error
-	)
-
-	/*
-		//failed 返回错误
-		{
-			"result": null,
-			"error": {
-				"code": -8,
-				"message": "Block height out of range"
-			},
-			"id": "foo"
-		}
-	*/
-
-	if !result.Get("error").IsObject() {
-
-		if !result.Get("result").Exists() {
-			return errors.New("Response is empty! ")
-		}
-
-		return nil
-	}
-
-	errInfo := fmt.Sprintf("[%d]%s",
-		result.Get("error.code").Int(),
-		result.Get("error.message").String())
-	err = errors.New(errInfo)
-
-	return err
-}
-
 // 用get方法获取内容
 func (c *Client) PostCall(path string, v map[string]interface{}) (*gjson.Result, error) {
 	if c.Debug {
 		log.Debug("Start Request API...")
 	}
-
-	//authHeader := req.Header{
-	//	"Accept":        "application/json",
-	//	"Authorization": "Basic " + c.AccessToken,
-	//}
-
-	//r, err := req.Post(c.BaseURL+path, req.BodyJSON(&v), authHeader)
 
 	r, err := req.Post(c.BaseURL+path, req.BodyJSON(&v))
 
@@ -228,12 +120,6 @@ func (c *Client) GetCall(path string) (*gjson.Result, error) {
 
 // 获取当前最高区块
 func (c *Client) getBlockHeight() (uint64, error) {
-	//resp, err := c.GetCall("/block/")
-	//if err != nil {
-	//	return 0, err
-	//}
-	//return resp.Get("number").Uint(), nil
-
 	mostHeightBlock, err := c.getMostHeightBlock();
 	if err != nil {
 		return 0, err
@@ -263,11 +149,6 @@ func (c *Client) getBalance(address string, ignoreReserve bool, reserveAmount in
 		return &AddrBalance{Address: address, Balance: big.NewInt(0), Actived: false, Nonce: uint64(0) }, nil
 	}
 
-	//if ignoreReserve {
-	//	//	return &AddrBalance{Address: address, Balance: big.NewInt(r.Get("account_data").Get("Balance").Int() - reserveAmount), Actived: true}, nil
-	//	//}
-
-	//balance := big.NewInt(r.Get("free").Int() - r.Get("feeFrozen").Int())
 	free := big.NewInt(r.Get("free").Int())
 	feeFrozen := big.NewInt(r.Get("feeFrozen").Int())
 	nonce := uint64( r.Get("nonce").Uint() )
