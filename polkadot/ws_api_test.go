@@ -57,7 +57,7 @@ var wsurl = ":"
 
 func Test_ws_getBlockHeight(t *testing.T){
 
-	height, err := tw.WSClient.getBlockHeight()
+	height, err := tw.ApiClient.WSClient.getBlockHeight()
 	if err != nil {
 		t.Error(err)
 	}
@@ -68,7 +68,7 @@ func Test_ws_getBlockHeight(t *testing.T){
 func Test_ws_gwtBlockHash(t *testing.T) {
 	//c := NewWSClient(wsurl, 0, true)
 	height := uint64(48551264)
-	hash, err := tw.WSClient.getBlockHash(height)
+	hash, err := tw.ApiClient.WSClient.getBlockHash(height)
 	if err != nil {
 		t.Error(err)
 	}
@@ -77,7 +77,7 @@ func Test_ws_gwtBlockHash(t *testing.T) {
 }
 
 func Test_ws_getSequence(t *testing.T){
-	c := tw.WSClient
+	c := tw.ApiClient.WSClient
 	addr := "rMzax7NdBeVe5dqwo87VQepccSh9AWyP1m"
 
 	sequence, err := c.getSequence(addr)
@@ -98,7 +98,7 @@ func Test_ws_getSequence(t *testing.T){
 }
 
 func Test_ws_getBalance(t *testing.T){
-	c := tw.WSClient
+	c := tw.ApiClient.WSClient
 	addr := "rMzax7NdBeVe5dqwo87VQepccSh9AWyP1m"
 
 	balance, err := c.getBalance(addr, true, 20000000)
@@ -149,7 +149,7 @@ func Test_ws_getBalance(t *testing.T){
 
 
 func Test_ws_isActived(t *testing.T){
-	c := tw.WSClient
+	c := tw.ApiClient.WSClient
 	addr := "rMzax7NdBeVe5dqwo87VQepccSh9AWyP1m"
 
 	isActived, err := c.isActived(addr)
@@ -172,7 +172,7 @@ func Test_ws_isActived(t *testing.T){
 }
 
 func Test_ws_getBlockByHeight(t *testing.T) {
-	c := tw.WSClient
+	c := tw.ApiClient.WSClient
 	r, err := c.getBlockByHeight(48554232)
 	if err != nil {
 		fmt.Println(err)

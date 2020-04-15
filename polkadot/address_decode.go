@@ -1,7 +1,6 @@
 package polkadot
 
 import (
-	"encoding/hex"
 	"github.com/blocktree/go-owcdrivers/addressEncoder"
 	"github.com/blocktree/go-owcrypt"
 	"github.com/blocktree/openwallet/v2/openwallet"
@@ -55,12 +54,26 @@ func (dec *AddressDecoderV2) AddressEncode(hash []byte, opts ...interface{}) (st
 
 // AddressVerify 地址校验
 func (dec *AddressDecoderV2) AddressVerify(address string, opts ...interface{}) bool {
-	pub, err := hex.DecodeString(address)
-	if err != nil {
+	P2PKHPrefix := byte(0x02)
+	decodeBytes, err := addressEncoder.Base58Decode(address, addressEncoder.NewBase58Alphabet(alphabet) )
+	if err != nil || len(decodeBytes) != 35 {
 		return false
 	}
+	if decodeBytes[0] != P2PKHPrefix {
+		return false
+	}
+	pub := decodeBytes[1: len(decodeBytes)-2 ]
 
-	if len(pub) != 33 {
+	data := append(prefix, pub...)
+	input := append(ssPrefix, data...)
+	checkSum := owcrypt.Hash(input, 64, owcrypt.HASH_ALG_BLAKE2B)[:2]
+
+	for i := 0; i < 2; i ++ {
+		if checkSum[i] != decodeBytes[33 + i] {
+			return false
+		}
+	}
+	if len(pub) != 32 {
 		return false
 	}
 	return true

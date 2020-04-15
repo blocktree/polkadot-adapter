@@ -18,7 +18,6 @@ package polkadot
 import (
 	"github.com/astaxie/beego/config"
 	"path/filepath"
-	"testing"
 )
 
 
@@ -35,7 +34,7 @@ func testNewWalletManager() *WalletManager {
 	wm := NewWalletManager()
 
 	//读取配置
-	absFile := filepath.Join("conf", "conf.ini")
+	absFile := filepath.Join("conf", "DOT.ini")
 	//log.Debug("absFile:", absFile)
 	c, err := config.NewConfig("ini", absFile)
 	if err != nil {
