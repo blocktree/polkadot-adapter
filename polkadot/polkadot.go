@@ -92,7 +92,7 @@ func (wm *WalletManager) CurveType() uint32 {
 
 //FullName 币种全名
 func (wm *WalletManager) FullName() string {
-	return "Ripple"
+	return "Polkadot"
 }
 
 //Symbol 币种标识
@@ -102,7 +102,7 @@ func (wm *WalletManager) Symbol() string {
 
 //小数位精度
 func (wm *WalletManager) Decimal() int32 {
-	return 18
+	return 12
 }
 
 //AddressDecode 地址解析器
