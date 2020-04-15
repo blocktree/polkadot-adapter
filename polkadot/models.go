@@ -170,7 +170,7 @@ func (b *Block) BlockHeader() *openwallet.BlockHeader {
 	//obj.Confirmations = b.Confirmations
 	obj.Previousblockhash = b.PrevBlockHash
 	obj.Height = b.Height
-	obj.Symbol = Symbol
+	//obj.Symbol = Symbol
 
 	return &obj
 }

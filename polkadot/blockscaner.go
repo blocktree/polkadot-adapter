@@ -346,6 +346,7 @@ func (bs *DOTBlockScanner) RescanFailedRecord() {
 func (bs *DOTBlockScanner) newBlockNotify(block *Block, isFork bool) {
 	header := block.BlockHeader()
 	header.Fork = isFork
+	header.Symbol = bs.wm.Config.Symbol
 	bs.NewBlockNotify(header)
 }
 
