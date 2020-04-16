@@ -29,20 +29,20 @@ import (
 
 const (
 	//blockchainBucket  = "blockchain" //区块链数据集合
-	maxExtractingSize = 20           //并发的扫描线程数
+	maxExtractingSize = 20 //并发的扫描线程数
 )
 
 //DOTBlockScanner ontology的区块链扫描器
 type DOTBlockScanner struct {
 	*openwallet.BlockScannerBase
 
-	CurrentBlockHeight   uint64             //当前区块高度
-	extractingCH         chan struct{}      //扫描工作令牌
-	wm                   *WalletManager     //钱包管理者
-	IsScanMemPool        bool               //是否扫描交易池
-	RescanLastBlockCount uint64             //重扫上N个区块数量
+	CurrentBlockHeight   uint64         //当前区块高度
+	extractingCH         chan struct{}  //扫描工作令牌
+	wm                   *WalletManager //钱包管理者
+	IsScanMemPool        bool           //是否扫描交易池
+	RescanLastBlockCount uint64         //重扫上N个区块数量
 	//socketIO             *gosocketio.Client //socketIO客户端
-	RPCServer            int
+	RPCServer int
 }
 
 //ExtractResult 扫描完成的提取结果
@@ -86,7 +86,7 @@ func (bs *DOTBlockScanner) SetRescanBlockHeight(height uint64) error {
 
 	localBlock, err := bs.wm.ApiClient.getBlockByHeight(height)
 
-	if err!=nil{
+	if err != nil {
 		return errors.New("block height can not find in wallet")
 	}
 
@@ -155,7 +155,7 @@ func (bs *DOTBlockScanner) ScanBlockTask() {
 			//bs.DeleteRechargesByHeight(currentHeight - 1)
 			forkBlock, _ := bs.GetLocalBlock(previousHeight)
 			//删除上一区块链的未扫记录
-			bs.wm.Blockscanner.DeleteUnscanRecord(uint32(previousHeight))
+			bs.wm.Blockscanner.DeleteUnscanRecord(previousHeight)
 			currentHeight = previousHeight - 1 //倒退2个区块重新扫描
 			if currentHeight <= 0 {
 				currentHeight = 1
@@ -236,12 +236,12 @@ func (bs *DOTBlockScanner) ScanBlock(height uint64) error {
 		return err
 	}
 
-	bs.newBlockNotify(block ,false)
+	bs.newBlockNotify(block, false)
 
 	return nil
 }
 
-func (bs *DOTBlockScanner) scanBlock(height uint64) (*Block,error) {
+func (bs *DOTBlockScanner) scanBlock(height uint64) (*Block, error) {
 	block, err := bs.wm.ApiClient.getBlockByHeight(height)
 	if err != nil {
 		bs.wm.Log.Std.Info("block scanner can not get new block data; unexpected error: %v", err)
@@ -250,7 +250,7 @@ func (bs *DOTBlockScanner) scanBlock(height uint64) (*Block,error) {
 		unscanRecord := openwallet.NewUnscanRecord(height, "", err.Error(), bs.wm.Symbol())
 		bs.SaveUnscanRecord(unscanRecord)
 		bs.wm.Log.Std.Info("block height: %d extract failed.", height)
-		return nil,err
+		return nil, err
 	}
 
 	bs.wm.Log.Std.Info("block scanner scanning height: %d ...", block.Height)
@@ -260,7 +260,7 @@ func (bs *DOTBlockScanner) scanBlock(height uint64) (*Block,error) {
 		bs.wm.Log.Std.Info("block scanner can not extractRechargeRecords; unexpected error: %v", err)
 	}
 
-	return block,nil
+	return block, nil
 }
 
 //ScanTxMemPool 扫描交易内存池
@@ -314,7 +314,7 @@ func (bs *DOTBlockScanner) RescanFailedRecord() {
 		}
 	}
 
-	for height:= range blockMap {
+	for height := range blockMap {
 
 		if height == 0 {
 			continue
@@ -335,7 +335,7 @@ func (bs *DOTBlockScanner) RescanFailedRecord() {
 			continue
 		}
 		//删除未扫记录
-		bs.wm.Blockscanner.DeleteUnscanRecord(uint32(height))
+		bs.wm.Blockscanner.DeleteUnscanRecord(height)
 	}
 
 	//删除未没有找到交易记录的重扫记录
@@ -388,7 +388,7 @@ func (bs *DOTBlockScanner) BatchExtractTransaction(blockHeight uint64, blockHash
 				}
 			} else {
 				//记录未扫区块
-				unscanRecord := openwallet.NewUnscanRecord(height, "", "",bs.wm.Symbol())
+				unscanRecord := openwallet.NewUnscanRecord(height, "", "", bs.wm.Symbol())
 				bs.SaveUnscanRecord(unscanRecord)
 				bs.wm.Log.Std.Info("block height: %d extract failed.", height)
 				failed++ //标记保存失败数
@@ -483,7 +483,6 @@ func (bs *DOTBlockScanner) ExtractTransaction(blockHeight uint64, blockHash stri
 
 	//bs.wm.Log.Std.Debug("block scanner scanning tx: %s ...", txid)
 
-
 	//优先使用传入的高度
 	if blockHeight > 0 && transaction.BlockHeight == 0 {
 		transaction.BlockHeight = blockHeight
@@ -491,7 +490,7 @@ func (bs *DOTBlockScanner) ExtractTransaction(blockHeight uint64, blockHash stri
 	}
 
 	bs.extractTransaction(&transaction, &result, scanAddressFunc)
-	
+
 	return result
 
 }
@@ -534,17 +533,17 @@ func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractR
 
 	currentHeight, err := bs.wm.ApiClient.getBlockHeight()
 
-	if trx == nil || err != nil{
+	if trx == nil || err != nil {
 		//记录哪个区块哪个交易单没有完成扫描
 		success = false
 	} else {
 
 		if success {
 			sourceKey, ok := scanAddressFunc(trx.From)
-			if ok{
+			if ok {
 				input := openwallet.TxInput{}
 				input.TxID = trx.TxID
-				input.Address= trx.From
+				input.Address = trx.From
 				input.Amount = convertToAmount(trx.Fee)
 				input.Coin = openwallet.Coin{
 					Symbol:     bs.wm.Symbol(),
@@ -555,7 +554,7 @@ func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractR
 				input.CreateAt = createAt
 				input.BlockHeight = trx.BlockHeight
 				input.BlockHash = trx.BlockHash
-				input.Confirm = int64(currentHeight-trx.BlockHeight)
+				input.Confirm = int64(currentHeight - trx.BlockHeight)
 				input.IsMemo = true
 				//input.Memo = trx.MemoData
 				ed := result.extractData[sourceKey]
@@ -566,10 +565,9 @@ func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractR
 				ed.TxInputs = append(ed.TxInputs, &input)
 			}
 
-
-			if trx.To !=""{
+			if trx.To != "" {
 				sourceKey, ok := scanAddressFunc(trx.To)
-				if ok{
+				if ok {
 					output := openwallet.TxOutPut{}
 					output.TxID = trx.TxID
 					output.Address = trx.To
@@ -583,7 +581,7 @@ func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractR
 					output.CreateAt = createAt
 					output.BlockHeight = trx.BlockHeight
 					output.BlockHash = trx.BlockHash
-					output.Confirm = int64(currentHeight-trx.BlockHeight)
+					output.Confirm = int64(currentHeight - trx.BlockHeight)
 					output.IsMemo = true
 					//output.Memo = trx.MemoData
 					ed := result.extractData[sourceKey]
@@ -614,7 +612,7 @@ func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractR
 					Status:      status,
 					SubmitTime:  int64(trx.TimeStamp),
 					ConfirmTime: int64(trx.TimeStamp),
-					IsMemo:false,
+					IsMemo:      false,
 				}
 
 				wxID := openwallet.GenTransactionWxID(tx)
@@ -639,7 +637,7 @@ func (bs *DOTBlockScanner) newExtractDataNotify(height uint64, extractData map[s
 			if err != nil {
 				bs.wm.Log.Error("BlockExtractDataNotify unexpected error:", err)
 				//记录未扫区块
-				unscanRecord := openwallet.NewUnscanRecord(height, "", "ExtractData Notify failed.",bs.wm.Symbol())
+				unscanRecord := openwallet.NewUnscanRecord(height, "", "ExtractData Notify failed.", bs.wm.Symbol())
 				err = bs.SaveUnscanRecord(unscanRecord)
 				if err != nil {
 					bs.wm.Log.Std.Error("block height: %d, save unscan record failed. unexpected error: %v", height, err.Error())
@@ -651,7 +649,6 @@ func (bs *DOTBlockScanner) newExtractDataNotify(height uint64, extractData map[s
 
 	return nil
 }
-
 
 //DeleteUnscanRecordNotFindTX 删除未没有找到交易记录的重扫记录
 func (bs *DOTBlockScanner) DeleteUnscanRecordNotFindTX() error {
@@ -908,7 +905,7 @@ func (bs *DOTBlockScanner) SaveLocalNewBlock(blockHeight uint64, blockHash strin
 	}
 
 	header := &openwallet.BlockHeader{
-		//Hash:   blockHash,
+		Hash:   blockHash,
 		Height: blockHeight,
 		Fork:   false,
 		Symbol: bs.wm.Symbol(),
@@ -933,7 +930,7 @@ func (bs *DOTBlockScanner) GetBalanceByAddress(address ...string) ([]*openwallet
 
 	for _, addr := range address {
 
-		balance, err := bs.wm.ApiClient.getBalance(addr,bs.wm.Config.IgnoreReserve,bs.wm.Config.ReserveAmount)
+		balance, err := bs.wm.ApiClient.getBalance(addr, bs.wm.Config.IgnoreReserve, bs.wm.Config.ReserveAmount)
 
 		if err != nil {
 			return nil, err

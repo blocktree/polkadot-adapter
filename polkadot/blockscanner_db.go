@@ -21,7 +21,7 @@ import (
 )
 
 //SaveLocalBlockHead 记录区块高度和hash到本地
-func (bs *DOTBlockScanner) SaveLocalBlockHead(blockHeight uint32, blockHash string) error {
+func (bs *DOTBlockScanner) SaveLocalBlockHead(blockHeight uint64, blockHash string) error {
 
 	if bs.BlockchainDAI == nil {
 		return fmt.Errorf("Blockchain DAI is not setup ")
@@ -29,7 +29,7 @@ func (bs *DOTBlockScanner) SaveLocalBlockHead(blockHeight uint32, blockHash stri
 
 	header := &openwallet.BlockHeader{
 		Hash:   blockHash,
-		Height: uint64(blockHeight),
+		Height: blockHeight,
 		Fork:   false,
 		Symbol: bs.wm.Symbol(),
 	}
@@ -38,7 +38,7 @@ func (bs *DOTBlockScanner) SaveLocalBlockHead(blockHeight uint32, blockHash stri
 }
 
 //GetLocalBlockHead 获取本地记录的区块高度和hash
-func (bs *DOTBlockScanner) GetLocalBlockHead() (uint32, string, error) {
+func (bs *DOTBlockScanner) GetLocalBlockHead() (uint64, string, error) {
 
 	if bs.BlockchainDAI == nil {
 		return 0, "", fmt.Errorf("Blockchain DAI is not setup ")
@@ -49,7 +49,7 @@ func (bs *DOTBlockScanner) GetLocalBlockHead() (uint32, string, error) {
 		return 0, "", err
 	}
 
-	return uint32(header.Height), header.Hash, nil
+	return header.Height, header.Hash, nil
 }
 
 //SaveLocalBlock 记录本地新区块
@@ -83,8 +83,8 @@ func (bs *DOTBlockScanner) GetLocalBlock(height uint64) (*Block, error) {
 	}
 
 	block := &Block{
-		Hash: header.Hash,
-		Height:  header.Height,
+		Hash:          header.Hash,
+		Height:        header.Height,
 		PrevBlockHash: header.Previousblockhash,
 	}
 
@@ -102,13 +102,13 @@ func (bs *DOTBlockScanner) SaveUnscanRecord(record *openwallet.UnscanRecord) err
 }
 
 //DeleteUnscanRecord 删除指定高度的未扫记录
-func (bs *DOTBlockScanner) DeleteUnscanRecord(height uint32) error {
+func (bs *DOTBlockScanner) DeleteUnscanRecord(height uint64) error {
 
 	if bs.BlockchainDAI == nil {
 		return fmt.Errorf("Blockchain DAI is not setup ")
 	}
 
-	return bs.BlockchainDAI.DeleteUnscanRecordByHeight(uint64(height), bs.wm.Symbol())
+	return bs.BlockchainDAI.DeleteUnscanRecordByHeight(height, bs.wm.Symbol())
 }
 
 func (bs *DOTBlockScanner) GetUnscanRecords() ([]*openwallet.UnscanRecord, error) {
