@@ -49,7 +49,9 @@ type DOTBlockScanner struct {
 type ExtractResult struct {
 	extractData map[string]*openwallet.TxExtractData
 	TxID        string
+	BlockHash   string
 	BlockHeight uint64
+	BlockTime   int64
 	Success     bool
 }
 
@@ -410,7 +412,7 @@ func (bs *DOTBlockScanner) BatchExtractTransaction(blockHeight uint64, blockHash
 			go func(mBlockHeight uint64, mTx Transaction, end chan struct{}, mProducer chan<- ExtractResult) {
 
 				//导出提出的交易
-				mProducer <- bs.ExtractTransaction(mBlockHeight, eBlockHash, mTx, bs.ScanAddressFunc, memPool)
+				mProducer <- bs.ExtractTransaction(mBlockHeight, eBlockHash, mTx, bs.ScanTargetFunc)
 				//释放
 				<-end
 
@@ -470,11 +472,10 @@ func (bs *DOTBlockScanner) extractRuntime(producer chan ExtractResult, worker ch
 }
 
 //ExtractTransaction 提取交易单
-func (bs *DOTBlockScanner) ExtractTransaction(blockHeight uint64, blockHash string, transaction Transaction, scanAddressFunc openwallet.BlockScanAddressFunc, memPool bool) ExtractResult {
+func (bs *DOTBlockScanner) ExtractTransaction(blockHeight uint64, blockHash string, transaction Transaction, scanAddressFunc openwallet.BlockScanTargetFunc) ExtractResult {
 
 	var (
 		result = ExtractResult{
-			BlockHeight: blockHeight,
 			TxID:        transaction.TxID,
 			extractData: make(map[string]*openwallet.TxExtractData),
 			Success:     true,
@@ -514,118 +515,139 @@ func convertFromAmount(amountStr string) uint64 {
 }
 
 //ExtractTransactionData 提取交易单
-func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractResult, scanAddressFunc openwallet.BlockScanAddressFunc) {
-	var (
-		success = true
-	)
-	createAt := time.Now().Unix()
-	//var (
-	//	currentHeight uint64
-	//	err error
-	//)
-	//if bs.wm.Config.APIChoose == "rpc"{
-	//	currentHeight,err = bs.wm.Client.getBlockHeight()
-	//}else if bs.wm.Config.APIChoose == "ws" {
-	//	currentHeight, err = bs.wm.WSClient.getBlockHeight()
-	//} else {
-	//	//
+func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractResult, scanTargetFunc openwallet.BlockScanTargetFunc) {
+	result.BlockHash = trx.BlockHash
+	result.BlockHeight = trx.BlockHeight
+	result.BlockTime = int64(trx.TimeStamp)
+
+	////跳过不一致的symbol
+	//if trx.Symbol != bs.wm.Symbol() {
+	//	result.Success = true
+	//	return result
 	//}
 
-	currentHeight, err := bs.wm.ApiClient.getBlockHeight()
-
-	if trx == nil || err != nil {
-		//记录哪个区块哪个交易单没有完成扫描
-		success = false
-	} else {
-
-		if success {
-			sourceKey, ok := scanAddressFunc(trx.From)
-			if ok {
-				input := openwallet.TxInput{}
-				input.TxID = trx.TxID
-				input.Address = trx.From
-				input.Amount = convertToAmount(trx.Fee)
-				input.Coin = openwallet.Coin{
-					Symbol:     bs.wm.Symbol(),
-					IsContract: false,
-				}
-				input.Index = 0
-				input.Sid = openwallet.GenTxInputSID(trx.TxID, bs.wm.Symbol(), "", uint64(0))
-				input.CreateAt = createAt
-				input.BlockHeight = trx.BlockHeight
-				input.BlockHash = trx.BlockHash
-				input.Confirm = int64(currentHeight - trx.BlockHeight)
-				input.IsMemo = false
-				//input.Memo = trx.MemoData
-				ed := result.extractData[sourceKey]
-				if ed == nil {
-					ed = openwallet.NewBlockExtractData()
-					result.extractData[sourceKey] = ed
-				}
-				ed.TxInputs = append(ed.TxInputs, &input)
-			}
-
-			if trx.To != "" {
-				sourceKey, ok := scanAddressFunc(trx.To)
-				if ok {
-					output := openwallet.TxOutPut{}
-					output.TxID = trx.TxID
-					output.Address = trx.To
-					output.Amount = convertToAmount(trx.Amount)
-					output.Coin = openwallet.Coin{
-						Symbol:     bs.wm.Symbol(),
-						IsContract: false,
-					}
-					output.Index = 0
-					output.Sid = openwallet.GenTxOutPutSID(trx.TxID, bs.wm.Symbol(), "", 0)
-					output.CreateAt = createAt
-					output.BlockHeight = trx.BlockHeight
-					output.BlockHash = trx.BlockHash
-					output.Confirm = int64(currentHeight - trx.BlockHeight)
-					output.IsMemo = false
-					//output.Memo = trx.MemoData
-					ed := result.extractData[sourceKey]
-					if ed == nil {
-						ed = openwallet.NewBlockExtractData()
-						result.extractData[sourceKey] = ed
-					}
-
-					ed.TxOutputs = append(ed.TxOutputs, &output)
-				}
-			}
-
-			for _, extractData := range result.extractData {
-				status := "1"
-				tx := &openwallet.Transaction{
-					From:   []string{trx.From + ":" + convertToAmount(trx.Amount)},
-					To:     []string{trx.To + ":" + convertToAmount(trx.Amount)},
-					Amount: convertToAmount(trx.Amount),
-					Fees:   convertToAmount(trx.Fee),
-					Coin: openwallet.Coin{
-						Symbol:     bs.wm.Symbol(),
-						IsContract: false,
-					},
-					BlockHash:   trx.BlockHash,
-					BlockHeight: trx.BlockHeight,
-					TxID:        trx.TxID,
-					Decimal:     12,
-					Status:      status,
-					SubmitTime:  int64(trx.TimeStamp),
-					ConfirmTime: int64(trx.TimeStamp),
-					IsMemo:      false,
-				}
-
-				wxID := openwallet.GenTransactionWxID(tx)
-				tx.WxID = wxID
-				extractData.Transaction = tx
-			}
-
-		}
-
-		success = true
-
+	if scanTargetFunc == nil {
+		bs.wm.Log.Std.Error("scanTargetFunc is not configurated")
+		result.Success = false
+		return
 	}
-	result.Success = success
+
+	from := trx.From
+	to := trx.To
+
+	//订阅地址为交易单中的发送者
+	accountID1, ok1 := scanTargetFunc(openwallet.ScanTarget{Address: from, Symbol: bs.wm.Symbol(), BalanceModelType: openwallet.BalanceModelTypeAddress})
+	//订阅地址为交易单中的接收者
+	if ok1 {
+		bs.InitExtractResult(accountID1, trx, result, 1)
+	}
+
+	accountID2, ok2 := scanTargetFunc(openwallet.ScanTarget{Address: to, Symbol: bs.wm.Symbol(), BalanceModelType: openwallet.BalanceModelTypeAddress})
+	//订阅地址为交易单中的接收者
+	if ok2 {
+		bs.InitExtractResult(accountID2, trx, result, 2)
+	}
+}
+
+//InitExtractResult optType = 0: 输入输出提取，1: 输入提取，2：输出提取
+func (bs *DOTBlockScanner) InitExtractResult(sourceKey string, tx *Transaction, result *ExtractResult, optType int64) {
+
+	txExtractData := result.extractData[sourceKey]
+	if txExtractData == nil {
+		txExtractData = &openwallet.TxExtractData{}
+	}
+
+	status := "1"
+	reason := ""
+
+	amount_dec, _ := decimal.NewFromString(convertToAmount(tx.Amount))
+	amount := amount_dec.Abs().String()
+
+	coin := openwallet.Coin{
+		Symbol:     bs.wm.Symbol(),
+		IsContract: false,
+	}
+
+	from := tx.From
+	to := tx.To
+
+	transx := &openwallet.Transaction{
+		Fees:        convertToAmount(tx.Fee),
+		Coin:        coin,
+		BlockHash:   result.BlockHash,
+		BlockHeight: result.BlockHeight,
+		TxID:        result.TxID,
+		Amount:      amount,
+		ConfirmTime: result.BlockTime,
+		From:        []string{from + ":" + amount},
+		To:          []string{to + ":" + amount},
+		IsMemo:      true,
+		Status:      status,
+		Reason:      reason,
+		TxType:      0,
+	}
+
+	wxID := openwallet.GenTransactionWxID(transx)
+	transx.WxID = wxID
+
+	txExtractData.Transaction = transx
+	if optType == 0 {
+		bs.extractTxInput(tx, txExtractData)
+		bs.extractTxOutput(tx, txExtractData)
+	} else if optType == 1 {
+		bs.extractTxInput(tx, txExtractData)
+	} else if optType == 2 {
+		bs.extractTxOutput(tx, txExtractData)
+	}
+
+	result.extractData[sourceKey] = txExtractData
+}
+
+//extractTxInput 提取交易单输入部分,无需手续费，所以只包含1个TxInput
+func (bs *DOTBlockScanner) extractTxInput(trx *Transaction, txExtractData *openwallet.TxExtractData) {
+
+	tx := txExtractData.Transaction
+	coin := tx.Coin
+
+	from := trx.From
+
+	//主网from交易转账信息，第一个TxInput
+	txInput := &openwallet.TxInput{}
+	txInput.Recharge.Sid = openwallet.GenTxInputSID(tx.TxID, bs.wm.Symbol(), "", uint64(0))
+	txInput.Recharge.TxID = tx.TxID
+	txInput.Recharge.Address = from
+	txInput.Recharge.Coin = coin
+	txInput.Recharge.Amount = tx.Amount
+	txInput.Recharge.Symbol = coin.Symbol
+	txInput.Recharge.BlockHash = tx.BlockHash
+	txInput.Recharge.BlockHeight = tx.BlockHeight
+	txInput.Recharge.Index = 0 //账户模型填0
+	txInput.Recharge.CreateAt = time.Now().Unix()
+	txInput.Recharge.TxType = tx.TxType
+	txExtractData.TxInputs = append(txExtractData.TxInputs, txInput)
+}
+
+//extractTxOutput 提取交易单输入部分,只有一个TxOutPut
+func (bs *DOTBlockScanner) extractTxOutput(trx *Transaction, txExtractData *openwallet.TxExtractData) {
+
+	tx := txExtractData.Transaction
+	coin := tx.Coin
+
+	to := trx.To
+
+	//主网to交易转账信息,只有一个TxOutPut
+	txOutput := &openwallet.TxOutPut{}
+	txOutput.Recharge.Sid = openwallet.GenTxOutPutSID(tx.TxID, bs.wm.Symbol(), "", uint64(0))
+	txOutput.Recharge.TxID = tx.TxID
+	txOutput.Recharge.Address = to
+	txOutput.Recharge.Coin = coin
+	txOutput.Recharge.Amount = tx.Amount
+	txOutput.Recharge.Symbol = coin.Symbol
+	txOutput.Recharge.BlockHash = tx.BlockHash
+	txOutput.Recharge.BlockHeight = tx.BlockHeight
+	txOutput.Recharge.Index = 0 //账户模型填0
+	txOutput.Recharge.CreateAt = time.Now().Unix()
+	txExtractData.TxOutputs = append(txExtractData.TxOutputs, txOutput)
 }
 
 //newExtractDataNotify 发送通知
