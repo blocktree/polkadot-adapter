@@ -555,7 +555,7 @@ func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractR
 				input.BlockHeight = trx.BlockHeight
 				input.BlockHash = trx.BlockHash
 				input.Confirm = int64(currentHeight - trx.BlockHeight)
-				input.IsMemo = true
+				input.IsMemo = false
 				//input.Memo = trx.MemoData
 				ed := result.extractData[sourceKey]
 				if ed == nil {
@@ -582,7 +582,7 @@ func (bs *DOTBlockScanner) extractTransaction(trx *Transaction, result *ExtractR
 					output.BlockHeight = trx.BlockHeight
 					output.BlockHash = trx.BlockHash
 					output.Confirm = int64(currentHeight - trx.BlockHeight)
-					output.IsMemo = true
+					output.IsMemo = false
 					//output.Memo = trx.MemoData
 					ed := result.extractData[sourceKey]
 					if ed == nil {
