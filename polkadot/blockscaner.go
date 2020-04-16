@@ -153,7 +153,7 @@ func (bs *DOTBlockScanner) ScanBlockTask() {
 
 			//删除上一区块链的所有充值记录
 			//bs.DeleteRechargesByHeight(currentHeight - 1)
-			forkBlock, _ := bs.GetLocalBlock(uint32(previousHeight))
+			forkBlock, _ := bs.GetLocalBlock(previousHeight)
 			//删除上一区块链的未扫记录
 			bs.wm.Blockscanner.DeleteUnscanRecord(uint32(previousHeight))
 			currentHeight = previousHeight - 1 //倒退2个区块重新扫描
@@ -161,7 +161,7 @@ func (bs *DOTBlockScanner) ScanBlockTask() {
 				currentHeight = 1
 			}
 
-			localBlock, err = bs.GetLocalBlock(uint32(currentHeight))
+			localBlock, err = bs.GetLocalBlock(currentHeight)
 			if err != nil && err != storm.ErrNotFound {
 				bs.wm.Log.Std.Error("block scanner can not get local block; unexpected error: %v", err)
 				break

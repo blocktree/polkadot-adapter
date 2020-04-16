@@ -61,7 +61,6 @@ func (bs *DOTBlockScanner) SaveLocalBlock(blockHeader *Block) error {
 
 	header := &openwallet.BlockHeader{
 		Hash:              blockHeader.Hash,
-		Merkleroot:        blockHeader.TransactionMerkleRoot,
 		Previousblockhash: blockHeader.PrevBlockHash,
 		Height:            blockHeader.Height,
 		Time:              blockHeader.Timestamp,
@@ -72,13 +71,13 @@ func (bs *DOTBlockScanner) SaveLocalBlock(blockHeader *Block) error {
 }
 
 //GetLocalBlock 获取本地区块数据
-func (bs *DOTBlockScanner) GetLocalBlock(height uint32) (*Block, error) {
+func (bs *DOTBlockScanner) GetLocalBlock(height uint64) (*Block, error) {
 
 	if bs.BlockchainDAI == nil {
 		return nil, fmt.Errorf("Blockchain DAI is not setup ")
 	}
 
-	header, err := bs.BlockchainDAI.GetLocalBlockHeadByHeight(uint64(height), bs.wm.Symbol())
+	header, err := bs.BlockchainDAI.GetLocalBlockHeadByHeight(height, bs.wm.Symbol())
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +85,7 @@ func (bs *DOTBlockScanner) GetLocalBlock(height uint32) (*Block, error) {
 	block := &Block{
 		Hash: header.Hash,
 		Height:  header.Height,
+		PrevBlockHash: header.Previousblockhash,
 	}
 
 	return block, nil

@@ -15,7 +15,7 @@
 package polkadot
 
 import (
-	"fmt"
+	"github.com/blocktree/openwallet/v2/log"
 	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/tidwall/gjson"
@@ -25,12 +25,11 @@ import (
 )
 
 type Block struct {
-	Hash                  string // actually block signature in XRP chain
-	PrevBlockHash         string // actually block signature in XRP chain
-	TransactionMerkleRoot string
-	Timestamp             uint64
-	Height                uint64
-	Transactions          []Transaction
+	Hash                  string		`json:"block"` // actually block signature in XRP chain
+	PrevBlockHash         string 		`json:"previousBlock"` // actually block signature in DOT chain
+	Timestamp             uint64		`json:"timestamp"`
+	Height                uint64   		`json:"height"`
+	Transactions          []Transaction`json:"transactions"`
 }
 
 type Transaction struct {
@@ -122,7 +121,8 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction{
 			fee, _ = math.SafeAdd(tip, partialFee)
 		}
 
-		fmt.Println("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: " ,blockTime, ",fee: ", fee)
+		//fmt.Println("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: " ,blockTime, ",fee: ", fee)
+		log.Debug("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: " ,blockTime, ",fee: ", fee)
 
 		amountInt, err := strconv.ParseInt(amountStr, 10, 64)
 		if err == nil{
