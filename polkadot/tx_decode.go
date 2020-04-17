@@ -76,11 +76,11 @@ func (decoder *TransactionDecoder) SubmitRawTransaction(wrapper openwallet.Walle
 		return nil, err
 	}
 
-	decoder.wm.Log.Debug("extparm : ", rawTx.GetExtParam().Get("nonce"))
+	decoder.wm.Log.Debug("extparm : ", rawTx.GetExtParam().Get("nonce") )
 	//交易成功，地址nonce+1并记录到缓存
 	for _, from := range rawTx.TxFrom {
-		newNonce, _ := math.SafeAdd(uint64(rawTx.GetExtParam().Get("nonce").Get(from).Uint()), uint64(1)) //nonce+1
-		decoder.wm.UpdateAddressNonce(wrapper, from, newNonce)
+		newNonce, _ := math.SafeAdd( uint64(rawTx.GetExtParam().Get("nonce").Get(from).Uint()), uint64(1) )		//nonce+1
+		decoder.wm.UpdateAddressNonce(wrapper, from, newNonce )
 	}
 
 	rawTx.TxID = txid
@@ -114,13 +114,13 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	}
 
 	if len(addresses) == 0 {
-		return openwallet.Errorf(openwallet.ErrAccountNotAddress, "[%s] have not addresses", rawTx.Account.AccountID)
+		return openwallet.Errorf(openwallet.ErrAccountNotAddress,"[%s] have not addresses", rawTx.Account.AccountID)
 	}
 
 	addressesBalanceList := make([]AddrBalance, 0, len(addresses))
 
 	for i, addr := range addresses {
-		balance, err := decoder.wm.ApiClient.getBalance(addr.Address, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
+		balance, err := decoder.wm.ApiClient.getBalance(addr.Address,decoder.wm.Config.IgnoreReserve,decoder.wm.Config.ReserveAmount)
 		if err != nil {
 			return err
 		}
@@ -166,15 +166,16 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	}
 
 	nonceMap := map[string]uint64{
-		from: nonce,
+		from : nonce,
 	}
 
 	rawTx.TxFrom = []string{from}
 	rawTx.TxTo = []string{to}
 	rawTx.SetExtParam("nonce", nonceMap)
 	rawTx.TxAmount = amountStr
-	rawTx.Fees = convertToAmount(fee)    //strconv.FormatUint(fee, 10)
-	rawTx.FeeRate = convertToAmount(fee) //strconv.FormatUint(fee, 10)
+	onChainFee, _ := math.SafeAdd(fee, convertFromAmount("0.01") )
+	rawTx.Fees = convertToAmount( onChainFee ) //strconv.FormatUint(fee, 10)	//链上实际收取的，加上0.01的固定消耗
+	rawTx.FeeRate = convertToAmount(fee)  //strconv.FormatUint(fee, 10)
 
 	mostHeightBlock, err := decoder.wm.ApiClient.getMostHeightBlock()
 	if err != nil {
@@ -376,18 +377,18 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 			"address : ", addrBalance.Address,
 			" balance : ", addrBalance.Balance,
 			" fees : ", fees,
-			" sumAmount : ", sumAmount)
+			" sumAmount : ", sumAmount )
 
 		//创建一笔交易单
 		rawTx := &openwallet.RawTransaction{
-			Coin:     sumRawTx.Coin,
-			Account:  sumRawTx.Account,
+			Coin:    sumRawTx.Coin,
+			Account: sumRawTx.Account,
 			ExtParam: sumRawTx.ExtParam,
 			To: map[string]string{
 				sumRawTx.SummaryAddress: sumAmount,
 			},
 			Required: 1,
-			FeeRate:  sumRawTx.FeeRate,
+			FeeRate: sumRawTx.FeeRate,
 		}
 
 		createErr := decoder.createRawTransaction(
@@ -430,8 +431,9 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 	rawTx.TxFrom = []string{from}
 	rawTx.TxTo = []string{to}
 	rawTx.TxAmount = amountStr
-	rawTx.Fees = convertToAmount(fee)    //strconv.FormatUint(fee, 10)
-	rawTx.FeeRate = convertToAmount(fee) //strconv.FormatUint(fee, 10)
+	onChainFee, _ := math.SafeAdd(fee, convertFromAmount("0.01") )
+	rawTx.Fees = convertToAmount( onChainFee ) //strconv.FormatUint(fee, 10)	//链上实际收取的，加上0.01的固定消耗
+	rawTx.FeeRate = convertToAmount(fee)  //strconv.FormatUint(fee, 10)
 
 	addrNodeBalance, err := decoder.wm.ApiClient.getBalance(from, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
 	if err != nil {
@@ -440,7 +442,7 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 	nonce := decoder.wm.GetAddressNonce(wrapper, addrNodeBalance)
 
 	nonceJSON := map[string]interface{}{}
-	if len(rawTx.ExtParam) > 0 {
+	if len(rawTx.ExtParam)>0 {
 		err = json.Unmarshal([]byte(rawTx.ExtParam), &nonceJSON)
 		if err != nil {
 			return err
@@ -507,26 +509,27 @@ func (decoder *TransactionDecoder) CreateSummaryRawTransactionWithError(wrapper 
 	return raTxWithErr, nil
 }
 
-func (decoder *TransactionDecoder) CreateEmptyRawTransactionAndMessage(fromPub string, toPub string, amount uint64, nonce uint64, fee uint64, mostHeightBlock *Block) (string, string, error) {
+func (decoder *TransactionDecoder) CreateEmptyRawTransactionAndMessage(fromPub string, toPub string, amount uint64, nonce uint64, fee uint64, mostHeightBlock *Block) (string, string, error){
 	tx := polkadotTransaction.TxStruct{
 		//发送方公钥
-		SenderPubkey: fromPub,
+		SenderPubkey:    fromPub,
 		//接收方公钥
 		RecipientPubkey: toPub,
 		//发送金额（最小单位）
-		Amount: amount,
+		Amount:          amount,
 		//nonce
-		Nonce: nonce,
+		Nonce:           nonce,
 		//手续费（最小单位）
-		Fee: fee,
+		Fee:             fee,
 		//当前高度
-		BlockHeight: mostHeightBlock.Height,
+		BlockHeight:     mostHeightBlock.Height,
 		//当前高度区块哈希
-		BlockHash: RemoveOxToAddress(mostHeightBlock.Hash),
+		BlockHash:       RemoveOxToAddress(mostHeightBlock.Hash),
 		//创世块哈希
-		GenesisHash: decoder.wm.Config.GenesisHash,
+		GenesisHash:     decoder.wm.Config.GenesisHash,
 		//spec版本
-		SpecVersion: decoder.wm.Config.SpecVersion,
+		SpecVersion:     decoder.wm.Config.SpecVersion,
 	}
 	return tx.CreateEmptyTransactionAndMessage()
 }
+
