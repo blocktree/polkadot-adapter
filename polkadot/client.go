@@ -1,21 +1,21 @@
 package polkadot
 
 type ApiClient struct {
-	Client *Client
-	WSClient *WSClient
+	Client    *Client
+	WSClient  *WSClient
 	APIChoose string
 }
 
 func NewApiClient(wm *WalletManager) error {
 	api := ApiClient{}
 
-	if len(wm.Config.APIChoose)==0 {
-		wm.Config.APIChoose = "rpc"		//默认采用rpc连接
+	if len(wm.Config.APIChoose) == 0 {
+		wm.Config.APIChoose = "rpc" //默认采用rpc连接
 	}
 	api.APIChoose = wm.Config.APIChoose
 	if api.APIChoose == "rpc" {
 		api.Client = NewClient(wm.Config.NodeAPI, false)
-	}else if api.APIChoose == "ws" {
+	} else if api.APIChoose == "ws" {
 		api.WSClient = NewWSClient(wm, wm.Config.WSAPI, 0, false)
 	}
 
@@ -28,11 +28,11 @@ func NewApiClient(wm *WalletManager) error {
 func (c *ApiClient) getBlockHeight() (uint64, error) {
 	var (
 		currentHeight uint64
-		err error
+		err           error
 	)
-	if c.APIChoose == "rpc"{
-		currentHeight,err = c.Client.getBlockHeight()
-	}else if c.APIChoose == "ws" {
+	if c.APIChoose == "rpc" {
+		currentHeight, err = c.Client.getBlockHeight()
+	} else if c.APIChoose == "ws" {
 		currentHeight, err = c.WSClient.getBlockHeight()
 	}
 
@@ -40,14 +40,14 @@ func (c *ApiClient) getBlockHeight() (uint64, error) {
 }
 
 //获取当前最新高度
-func (c *ApiClient) getMostHeightBlock() (*Block, error){
+func (c *ApiClient) getMostHeightBlock() (*Block, error) {
 	var (
 		mostHeightBlock *Block
-		err error
+		err             error
 	)
 	if c.APIChoose == "rpc" {
 		mostHeightBlock, err = c.Client.getMostHeightBlock()
-	}else if c.APIChoose == "ws" {
+	} else if c.APIChoose == "ws" {
 		//mostHeightBlock, err = decoder.wm.WSClient.getBlockHeight()
 	}
 
@@ -58,12 +58,12 @@ func (c *ApiClient) getMostHeightBlock() (*Block, error){
 func (c *ApiClient) getBalance(address string, ignoreReserve bool, reserveAmount int64) (*AddrBalance, error) {
 	var (
 		balance *AddrBalance
-		err error
+		err     error
 	)
 
 	if c.APIChoose == "rpc" {
 		balance, err = c.Client.getBalance(address, ignoreReserve, reserveAmount)
-	} else if c.APIChoose == "ws"{
+	} else if c.APIChoose == "ws" {
 		balance, err = c.WSClient.getBalance(address, ignoreReserve, reserveAmount)
 	}
 
@@ -73,7 +73,7 @@ func (c *ApiClient) getBalance(address string, ignoreReserve bool, reserveAmount
 func (c *ApiClient) getBlockByHeight(height uint64) (*Block, error) {
 	var (
 		block *Block
-		err error
+		err   error
 	)
 	if c.APIChoose == "rpc" {
 		block, err = c.Client.getBlockByHeight(height)
@@ -87,7 +87,7 @@ func (c *ApiClient) getBlockByHeight(height uint64) (*Block, error) {
 func (c *ApiClient) sendTransaction(rawTx string) (string, error) {
 	var (
 		txid string
-		err error
+		err  error
 	)
 	if c.APIChoose == "rpc" {
 		txid, err = c.Client.sendTransaction(rawTx)
@@ -96,4 +96,18 @@ func (c *ApiClient) sendTransaction(rawTx string) (string, error) {
 	}
 
 	return txid, err
+}
+
+func (c *ApiClient) getTxArtifacts() (*TxArtifacts, error) {
+	var (
+		txArtifacts *TxArtifacts
+		err         error
+	)
+	if c.APIChoose == "rpc" {
+		txArtifacts, err = c.Client.getTxArtifacts()
+	} else if c.APIChoose == "ws" {
+		//block, err = c.WSClient.TxArtifacts()
+	}
+
+	return txArtifacts, err
 }

@@ -25,11 +25,11 @@ import (
 )
 
 type Block struct {
-	Hash                  string		`json:"block"` // actually block signature in XRP chain
-	PrevBlockHash         string 		`json:"previousBlock"` // actually block signature in DOT chain
-	Timestamp             uint64		`json:"timestamp"`
-	Height                uint64   		`json:"height"`
-	Transactions          []Transaction`json:"transactions"`
+	Hash          string        `json:"block"`         // actually block signature in XRP chain
+	PrevBlockHash string        `json:"previousBlock"` // actually block signature in DOT chain
+	Timestamp     uint64        `json:"timestamp"`
+	Height        uint64        `json:"height"`
+	Transactions  []Transaction `json:"transactions"`
 }
 
 type Transaction struct {
@@ -44,14 +44,14 @@ type Transaction struct {
 	Status      string
 }
 
-func GetTransactionInBlock(json *gjson.Result) []Transaction{
+func GetTransactionInBlock(json *gjson.Result) []Transaction {
 	blockHash := gjson.Get(json.Raw, "hash").String()
 	blockHeight := gjson.Get(json.Raw, "number").Uint()
 	transactions := make([]Transaction, 0)
 
 	blockTime := uint64(time.Now().Unix())
 
-	for _, extrinsic := range gjson.Get(json.Raw, "extrinsics").Array(){
+	for _, extrinsic := range gjson.Get(json.Raw, "extrinsics").Array() {
 		//fmt.Println("extrinsic : " , extrinsic)
 		method := gjson.Get(extrinsic.Raw, "method").String()
 		success := gjson.Get(extrinsic.Raw, "success").Bool()
@@ -62,32 +62,32 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction{
 		}
 
 		//获取这个区块的时间
-		if method=="timestamp.set" {
+		if method == "timestamp.set" {
 			args := gjson.Get(extrinsic.Raw, "args").Array()
-			if len(args)==2 {
+			if len(args) == 2 {
 				blockTime = args[0].Uint()
 			}
 		}
 
-		if method!="balances.transfer" {	//不是这个method的全部不要
+		if method != "balances.transfer" { //不是这个method的全部不要
 			continue
 		}
 
-		argsTo := ""			//检测到的接收地址
-		argsAmountStr := ""		//检测到的接收金额
-		from := ""				//来源地址
-		to := ""				//目标地址
-		amountStr := ""			//金额
+		argsTo := ""        //检测到的接收地址
+		argsAmountStr := "" //检测到的接收金额
+		from := ""          //来源地址
+		to := ""            //目标地址
+		amountStr := ""     //金额
 		args := gjson.Get(extrinsic.Raw, "args").Array()
-		if len(args)==2 {
+		if len(args) == 2 {
 			argsTo = args[0].String()
 			argsAmountStr = args[1].String()
 		}
 
-		for _, event := range gjson.Get(extrinsic.Raw, "events").Array(){
+		for _, event := range gjson.Get(extrinsic.Raw, "events").Array() {
 			if gjson.Get(event.Raw, "method").String() == "balances.Transfer" {
 				data := gjson.Get(event.Raw, "data").Array()
-				if len(data)==3{
+				if len(data) == 3 {
 					from = data[0].String()
 					to = data[1].String()
 					amountStr = data[2].String()
@@ -95,16 +95,16 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction{
 			}
 		}
 
-		if argsTo=="" && to=="" {	//没有取到值
+		if argsTo == "" && to == "" { //没有取到值
 			continue
 		}
-		if argsAmountStr=="" && amountStr=="" {	//没有取到值
+		if argsAmountStr == "" && amountStr == "" { //没有取到值
 			continue
 		}
-		if argsTo!=to{	//值不一样
+		if argsTo != to { //值不一样
 			continue
 		}
-		if argsAmountStr!=amountStr{	//值不一样
+		if argsAmountStr != amountStr { //值不一样
 			continue
 		}
 
@@ -122,22 +122,22 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction{
 		}
 
 		//fmt.Println("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: " ,blockTime, ",fee: ", fee)
-		log.Debug("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: " ,blockTime, ",fee: ", fee)
+		log.Debug("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: ", blockTime, ",fee: ", fee)
 
 		amountInt, err := strconv.ParseInt(amountStr, 10, 64)
-		if err == nil{
+		if err == nil {
 			amount := uint64(amountInt)
 
 			transaction := Transaction{
-				TxID        : txid,
-				Fee         : fee,
-				TimeStamp   : blockTime,
-				From        : from,
-				To          : to,
-				Amount      : amount,
-				BlockHeight : blockHeight,
-				BlockHash   : blockHash,
-				Status      : "1",
+				TxID:        txid,
+				Fee:         fee,
+				TimeStamp:   blockTime,
+				From:        from,
+				To:          to,
+				Amount:      amount,
+				BlockHeight: blockHeight,
+				BlockHash:   blockHash,
+				Status:      "1",
 			}
 
 			transactions = append(transactions, transaction)
@@ -183,4 +183,24 @@ type AddrBalance struct {
 	Nonce   uint64
 	index   int
 	Actived bool
+}
+
+type TxArtifacts struct {
+	Hash        string
+	Height      int64
+	GenesisHash string
+	SpecVersion uint32
+	Metadata    string
+}
+
+func GetTxArtifacts(json *gjson.Result) *TxArtifacts {
+	obj := &TxArtifacts{}
+
+	obj.Hash = gjson.Get(json.Raw, "at").Get("hash").String()
+	obj.Height = gjson.Get(json.Raw, "at").Get("height").Int()
+	obj.GenesisHash = gjson.Get(json.Raw, "genesisHash").String()
+	obj.SpecVersion = uint32(gjson.Get(json.Raw, "specVersion").Uint())
+	obj.Metadata = gjson.Get(json.Raw, "metadata").String()
+
+	return obj
 }

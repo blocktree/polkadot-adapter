@@ -97,7 +97,7 @@ func (c *Client) GetCall(path string) (*gjson.Result, error) {
 		log.Debug("Start Request API...")
 	}
 
-	r, err := req.Get(c.BaseURL+path)
+	r, err := req.Get(c.BaseURL + path)
 
 	if c.Debug {
 		log.Std.Info("Request API Completed")
@@ -120,16 +120,26 @@ func (c *Client) GetCall(path string) (*gjson.Result, error) {
 
 // 获取当前最高区块
 func (c *Client) getBlockHeight() (uint64, error) {
-	mostHeightBlock, err := c.getMostHeightBlock();
+	mostHeightBlock, err := c.getMostHeightBlock()
 	if err != nil {
 		return 0, err
 	}
-	return mostHeightBlock.Height, nil;
+	return mostHeightBlock.Height, nil
+}
+
+// 获取当前最高区块
+func (c *Client) getTxArtifacts() (*TxArtifacts, error) {
+	resp, err := c.GetCall("/tx/artifacts/")
+
+	if err != nil {
+		return nil, err
+	}
+	return GetTxArtifacts(resp), nil
 }
 
 //获取当前最新高度
-func (c *Client) getMostHeightBlock() (*Block, error){
-	resp, err := c.GetCall("/block/" )
+func (c *Client) getMostHeightBlock() (*Block, error) {
+	resp, err := c.GetCall("/block/")
 
 	if err != nil {
 		return nil, err
@@ -139,26 +149,26 @@ func (c *Client) getMostHeightBlock() (*Block, error){
 
 // 获取地址余额
 func (c *Client) getBalance(address string, ignoreReserve bool, reserveAmount int64) (*AddrBalance, error) {
-	r, err := c.GetCall("/balance/"+address )
+	r, err := c.GetCall("/balance/" + address)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if r.Get("error").String() == "actNotFound" {
-		return &AddrBalance{Address: address, Balance: big.NewInt(0), Actived: false, Nonce: uint64(0) }, nil
+		return &AddrBalance{Address: address, Balance: big.NewInt(0), Actived: false, Nonce: uint64(0)}, nil
 	}
 
 	free := big.NewInt(r.Get("free").Int())
 	feeFrozen := big.NewInt(r.Get("feeFrozen").Int())
-	nonce := uint64( r.Get("nonce").Uint() )
+	nonce := uint64(r.Get("nonce").Uint())
 	balance := new(big.Int)
-	balance = balance.Sub( free, feeFrozen )
+	balance = balance.Sub(free, feeFrozen)
 	return &AddrBalance{Address: address, Balance: balance, Freeze: feeFrozen, Free: free, Actived: true, Nonce: nonce}, nil
 }
 
 func (c *Client) getBlockByHeight(height uint64) (*Block, error) {
-	resp, err := c.GetCall("/block/"+strconv.FormatUint(height, 10) )
+	resp, err := c.GetCall("/block/" + strconv.FormatUint(height, 10))
 
 	if err != nil {
 		return nil, err
@@ -168,7 +178,7 @@ func (c *Client) getBlockByHeight(height uint64) (*Block, error) {
 
 func (c *Client) sendTransaction(rawTx string) (string, error) {
 	body := map[string]interface{}{
-		"tx" : rawTx,
+		"tx": rawTx,
 	}
 
 	resp, err := c.PostCall("/tx", body)
@@ -178,10 +188,10 @@ func (c *Client) sendTransaction(rawTx string) (string, error) {
 
 	time.Sleep(time.Duration(1) * time.Second)
 
-	log.Debug( "sendTransaction result : ", resp )
+	log.Debug("sendTransaction result : ", resp)
 
 	if resp.Get("error").String() != "" && resp.Get("cause").String() != "" {
-		return "", errors.New( "Submit transaction with error: " + resp.Get("error").String() + "," + resp.Get("cause").String() )
+		return "", errors.New("Submit transaction with error: " + resp.Get("error").String() + "," + resp.Get("cause").String())
 	}
 
 	return resp.Get("hash").String(), nil
