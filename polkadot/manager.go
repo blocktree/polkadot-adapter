@@ -28,13 +28,13 @@ import (
 type WalletManager struct {
 	openwallet.AssetsAdapterBase
 
-	Storage *hdkeystore.HDKeystore //秘钥存取
+	Storage   *hdkeystore.HDKeystore //秘钥存取
 	ApiClient *ApiClient
 
 	Config          *WalletConfig                 //钱包管理配置
 	WalletsInSum    map[string]*openwallet.Wallet //参与汇总的钱包
-	Blockscanner    *DOTBlockScanner             //区块扫描器
-	Decoder         openwallet.AddressDecoderV2     //地址编码器
+	Blockscanner    *DOTBlockScanner              //区块扫描器
+	Decoder         openwallet.AddressDecoderV2   //地址编码器
 	TxDecoder       openwallet.TransactionDecoder //交易单编码器
 	Log             *log.OWLogger                 //日志工具
 	ContractDecoder *ContractDecoder              //智能合约解析器
@@ -129,7 +129,7 @@ func (wm *WalletManager) GetAddressNonce(wrapper openwallet.WalletDAI, account *
 
 	nonce_onchain = account.Nonce
 
-	wm.Log.Debug(account.Address, " get nonce : ", nonce, ", nonce_onchain : ", nonce_onchain)
+	wm.Log.Info(account.Address, " get nonce : ", nonce, ", nonce_onchain : ", nonce_onchain)
 
 	//如果本地nonce_db > 链上nonce,采用本地nonce,否则采用链上nonce
 	if nonce > nonce_onchain {
@@ -145,7 +145,7 @@ func (wm *WalletManager) GetAddressNonce(wrapper openwallet.WalletDAI, account *
 // UpdateAddressNonce
 func (wm *WalletManager) UpdateAddressNonce(wrapper openwallet.WalletDAI, address string, nonce uint64) {
 	key := wm.Symbol() + "-nonce"
-	wm.Log.Debug(address, " set nonce ", nonce)
+	wm.Log.Info(address, " set nonce ", nonce)
 	err := wrapper.SetAddressExtParam(address, key, nonce)
 	if err != nil {
 		wm.Log.Errorf("WalletDAI SetAddressExtParam failed, err: %v", err)
