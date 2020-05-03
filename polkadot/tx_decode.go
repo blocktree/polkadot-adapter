@@ -76,7 +76,7 @@ func (decoder *TransactionDecoder) SubmitRawTransaction(wrapper openwallet.Walle
 		return nil, err
 	}
 
-	decoder.wm.Log.Debug("extparm : ", rawTx.GetExtParam().Get("nonce"))
+	decoder.wm.Log.Info("extparm : ", rawTx.GetExtParam().Get("nonce"), " update from : ", rawTx.TxFrom)
 	//交易成功，地址nonce+1并记录到缓存
 	for _, from := range rawTx.TxFrom {
 		newNonce, _ := math.SafeAdd(uint64(rawTx.GetExtParam().Get("nonce").Get(from).Uint()), uint64(1)) //nonce+1
