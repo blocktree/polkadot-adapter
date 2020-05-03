@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/math"
 	"math/big"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/blocktree/go-owcdrivers/polkadotTransaction"
@@ -67,21 +68,22 @@ func (decoder *TransactionDecoder) SubmitRawTransaction(wrapper openwallet.Walle
 		return nil, fmt.Errorf("transaction is not completed validation")
 	}
 
+	from := rawTx.Signatures[rawTx.Account.AccountID][0].Address.Address
+	nonce := rawTx.Signatures[rawTx.Account.AccountID][0].Nonce
+	nonceUint, _ := strconv.ParseUint(nonce[2:], 16, 64)
+
+	decoder.wm.Log.Info("nonce : ", nonceUint, " update from : ", from)
+
 	txid, err := decoder.wm.SendRawTransaction(rawTx.RawHex)
 	if err != nil {
-		for _, from := range rawTx.TxFrom {
-			decoder.wm.UpdateAddressNonce(wrapper, from, 0)
-		}
-		fmt.Println("Tx to send: ", rawTx.RawHex)
+		decoder.wm.UpdateAddressNonce(wrapper, from, 0)
+		decoder.wm.Log.Error("Error Tx to send: ", rawTx.RawHex)
 		return nil, err
 	}
 
-	decoder.wm.Log.Info("extparm : ", rawTx.GetExtParam().Get("nonce"), " update from : ", rawTx.TxFrom)
 	//交易成功，地址nonce+1并记录到缓存
-	for _, from := range rawTx.TxFrom {
-		newNonce, _ := math.SafeAdd(uint64(rawTx.GetExtParam().Get("nonce").Get(from).Uint()), uint64(1)) //nonce+1
-		decoder.wm.UpdateAddressNonce(wrapper, from, newNonce)
-	}
+	newNonce, _ := math.SafeAdd(nonceUint, uint64(1)) //nonce+1
+	decoder.wm.UpdateAddressNonce(wrapper, from, newNonce)
 
 	rawTx.TxID = txid
 	rawTx.IsSubmit = true
@@ -207,7 +209,7 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	}
 	signature := openwallet.KeySignature{
 		EccType: decoder.wm.Config.CurveType,
-		Nonce:   "",
+		Nonce:   "0x" + strconv.FormatUint(nonce, 16),
 		Address: addr,
 		Message: message,
 	}
