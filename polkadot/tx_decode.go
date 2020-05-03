@@ -479,7 +479,7 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 
 	signature := openwallet.KeySignature{
 		EccType: decoder.wm.Config.CurveType,
-		Nonce:   "",
+		Nonce:   "0x" + strconv.FormatUint(nonce, 16),
 		Address: fromAddr,
 		Message: hash,
 	}
