@@ -191,6 +191,8 @@ type TxArtifacts struct {
 	GenesisHash string
 	SpecVersion uint32
 	Metadata    string
+	TxVersion   uint32
+	ChainName   string
 }
 
 func GetTxArtifacts(json *gjson.Result) *TxArtifacts {
@@ -201,6 +203,8 @@ func GetTxArtifacts(json *gjson.Result) *TxArtifacts {
 	obj.GenesisHash = gjson.Get(json.Raw, "genesisHash").String()
 	obj.SpecVersion = uint32(gjson.Get(json.Raw, "specVersion").Uint())
 	obj.Metadata = gjson.Get(json.Raw, "metadata").String()
+	obj.TxVersion = uint32(gjson.Get(json.Raw, "txVersion").Uint())
+	obj.ChainName = gjson.Get(json.Raw, "chainName").String()
 
 	return obj
 }

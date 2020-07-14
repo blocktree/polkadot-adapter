@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/astaxie/beego v1.12.0
-	github.com/blocktree/go-owcdrivers v1.2.2
+	github.com/blocktree/go-owcdrivers v1.2.5
 	github.com/blocktree/go-owcrypt v1.1.4
 	github.com/blocktree/openwallet/v2 v2.0.2
 	github.com/bwmarrin/snowflake v0.3.0

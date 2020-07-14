@@ -519,6 +519,7 @@ func (decoder *TransactionDecoder) CreateEmptyRawTransactionAndMessage(fromPub s
 	}
 	genesisHash := txArtifacts.GenesisHash
 	specVersion := txArtifacts.SpecVersion
+	txVersion := txArtifacts.TxVersion
 
 	tx := polkadotTransaction.TxStruct{
 		//发送方公钥
@@ -539,6 +540,8 @@ func (decoder *TransactionDecoder) CreateEmptyRawTransactionAndMessage(fromPub s
 		GenesisHash: RemoveOxToAddress(genesisHash),
 		//spec版本
 		SpecVersion: specVersion,
+		//TransactionVersion
+		TxVersion : txVersion,
 	}
 	return tx.CreateEmptyTransactionAndMessage()
 }
