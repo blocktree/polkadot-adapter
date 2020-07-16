@@ -8,17 +8,31 @@ openwtester包下的测试用例已经集成了openwallet钱包体系，创建co
 
 ```ini
 
-# mainnet node api url
-mainnetNodeAPI = "http://127.0.0.1:10026/"
-# testnet node api url
-testnetNodeAPI = "http://localhost:9922/"
-# Is network test?
-isTestNet = false
-# feeScale
-feeScale = 100
-# feeCharge is now a fixed value 10000000(aka 0.1VSYS)
-feeCharge = 10000000
+# node api url
+# nodeAPI = "http://127.0.0.1:8080"
+nodeAPI = "http://47.57.26.144:20027"
+
+# ws api url
+# wsAPI = "ws://47.75.78.127:20032"
+
+# fixed Fee in smallest unit
+fixedFee = 10000000000
+# reserve amount in smallest unit
+reserveAmount = 0
+# ignore reserve amount
+ignoreReserve = true
+# register fee in smallest unit
+registerFee = 10000
+# last ledger sequence number
+lastLedgerSequenceNumber = 20
+# memo type
+memoType = "withdraw"
+# memo format
+memoFormat = "text/plain"
+# which feild of memo to scan
+memoScan = "MemoData"
 # Cache data file directory, default = "", current directory: ./data
 dataDir = ""
+APIChoose = "rpc"
 
 ```
