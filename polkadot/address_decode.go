@@ -9,7 +9,6 @@ import (
 var (
 	alphabet = addressEncoder.BTCAlphabet
 	ssPrefix = []byte{0x53, 0x53, 0x35, 0x38, 0x50, 0x52, 0x45}
-	prefix = []byte{0x02}
 	encodeType = "base58"
 )
 
@@ -45,6 +44,7 @@ func (dec *AddressDecoderV2) AddressEncode(hash []byte, opts ...interface{}) (st
 	if len(hash) != 32 {
 		hash, _= owcrypt.CURVE25519_convert_Ed_to_X(hash)
 	}
+	prefix := []byte{ dec.wm.AddrPrefix() }
 	data := addressEncoder.CatData(prefix, hash)
 	input := addressEncoder.CatData(ssPrefix, data)
 	checkSum := owcrypt.Hash(input, 64, owcrypt.HASH_ALG_BLAKE2B)[:2]
@@ -54,7 +54,7 @@ func (dec *AddressDecoderV2) AddressEncode(hash []byte, opts ...interface{}) (st
 
 // AddressVerify 地址校验
 func (dec *AddressDecoderV2) AddressVerify(address string, opts ...interface{}) bool {
-	P2PKHPrefix := byte(0x02)
+	P2PKHPrefix := byte( dec.wm.AddrPrefix() )
 	decodeBytes, err := addressEncoder.Base58Decode(address, addressEncoder.NewBase58Alphabet(alphabet) )
 	if err != nil || len(decodeBytes) != 35 {
 		return false
@@ -63,7 +63,7 @@ func (dec *AddressDecoderV2) AddressVerify(address string, opts ...interface{}) 
 		return false
 	}
 	pub := decodeBytes[1: len(decodeBytes)-2 ]
-
+	prefix := []byte{ dec.wm.AddrPrefix() }
 	data := append(prefix, pub...)
 	input := append(ssPrefix, data...)
 	checkSum := owcrypt.Hash(input, 64, owcrypt.HASH_ALG_BLAKE2B)[:2]

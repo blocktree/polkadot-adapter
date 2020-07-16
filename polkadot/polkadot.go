@@ -95,6 +95,11 @@ func (wm *WalletManager) FullName() string {
 	return "Polkadot"
 }
 
+//获取地址格式开头
+func (wm *WalletManager) AddrPrefix() byte {
+	return wm.Config.AddrPrefix
+}
+
 //Symbol 币种标识
 func (wm *WalletManager) Symbol() string {
 	return wm.Config.Symbol

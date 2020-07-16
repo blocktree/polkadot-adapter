@@ -33,6 +33,7 @@ const (
 	CurveType   = owcrypt.ECC_CURVE_ED25519
 	GenesisHash = "b0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe"
 	SpecVersion = 1058
+	AddrPrefix = 0x00
 )
 
 type WalletConfig struct {
@@ -86,9 +87,11 @@ type WalletConfig struct {
 	GenesisHash string
 
 	SpecVersion uint32
+
+	AddrPrefix byte
 }
 
-func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion uint32) *WalletConfig {
+func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion uint32, AddrPrefix byte) *WalletConfig {
 
 	c := WalletConfig{}
 
@@ -98,6 +101,7 @@ func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion 
 	c.CurveType = CurveType
 	c.GenesisHash = GenesisHash
 	c.SpecVersion = SpecVersion
+	c.AddrPrefix = AddrPrefix
 
 	//钥匙备份路径
 	c.keyDir = filepath.Join("data", strings.ToLower(c.Symbol), "key")

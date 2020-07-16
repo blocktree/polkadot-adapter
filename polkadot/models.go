@@ -69,7 +69,7 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 			}
 		}
 
-		if method != "balances.transfer" { //不是这个method的全部不要
+		if method != "balances.transfer" && method != "claims.attest" { //不是这个method的全部不要
 			continue
 		}
 
@@ -93,6 +93,14 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 					amountStr = data[2].String()
 				}
 			}
+			if gjson.Get(event.Raw, "method").String() == "claims.Claimed" {
+				data := gjson.Get(event.Raw, "data").Array()
+				if len(data) == 3 {
+					//from = data[1].String()
+					to = data[0].String()
+					amountStr = data[2].String()
+				}
+			}
 		}
 
 		if argsTo == "" && to == "" { //没有取到值
@@ -101,10 +109,10 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 		if argsAmountStr == "" && amountStr == "" { //没有取到值
 			continue
 		}
-		if argsTo != to { //值不一样
+		if method == "balances.transfer" && argsTo != to { //值不一样
 			continue
 		}
-		if argsAmountStr != amountStr { //值不一样
+		if method == "balances.transfer" && argsAmountStr != amountStr { //值不一样
 			continue
 		}
 

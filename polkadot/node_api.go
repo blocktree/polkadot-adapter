@@ -168,14 +168,6 @@ func (c *Client) getBalance(address string, ignoreReserve bool, reserveAmount in
 }
 
 func (c *Client) getBlockByHeight(height uint64) (*Block, error) {
-	if height == 2901131 {
-		obj := &Block{}
-		obj.Hash = "0x8366f8bb92b9ac71437205eb117cea9ec1cf4b30a9cd56263386d6c062d6a3f1"
-		obj.PrevBlockHash = "0x4f950823b5ee949ce53ea9a06853051b4fd1a3518bbb3be48161f4e544c4fbd9"
-		obj.Height = 2901131
-		obj.Transactions = make([]Transaction, 0)
-		return obj, nil
-	}
 	resp, err := c.GetCall("/block/" + strconv.FormatUint(height, 10))
 
 	if err != nil {
