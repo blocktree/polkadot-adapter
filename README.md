@@ -9,8 +9,7 @@ openwtester包下的测试用例已经集成了openwallet钱包体系，创建co
 ```ini
 
 # node api url
-# nodeAPI = "http://127.0.0.1:8080"
-nodeAPI = "http://47.57.26.144:20027"
+nodeAPI = "http://127.0.0.1:8080"
 
 # ws api url
 # wsAPI = "ws://47.75.78.127:20032"
