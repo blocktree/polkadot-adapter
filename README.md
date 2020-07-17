@@ -12,7 +12,7 @@ openwtester包下的测试用例已经集成了openwallet钱包体系，创建co
 nodeAPI = "http://127.0.0.1:8080"
 
 # ws api url
-# wsAPI = "ws://47.75.78.127:20032"
+# wsAPI = "ws://127.0.0.1:12345"
 
 # fixed Fee in smallest unit
 fixedFee = 10000000000
