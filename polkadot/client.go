@@ -14,7 +14,7 @@ func NewApiClient(wm *WalletManager) error {
 	}
 	api.APIChoose = wm.Config.APIChoose
 	if api.APIChoose == "rpc" {
-		api.Client = NewClient(wm.Config.NodeAPI, false)
+		api.Client = NewClient(wm.Config.NodeAPI, false, wm.Symbol() )
 	} else if api.APIChoose == "ws" {
 		api.WSClient = NewWSClient(wm, wm.Config.WSAPI, 0, false)
 	}

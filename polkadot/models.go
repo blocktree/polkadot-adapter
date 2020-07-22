@@ -63,9 +63,9 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 
 		//获取这个区块的时间
 		if method == "timestamp.set" {
-			args := gjson.Get(extrinsic.Raw, "args").Array()
-			if len(args) == 2 {
-				blockTime = args[0].Uint()
+			args := gjson.Get(extrinsic.Raw, "args")
+			if len(args.Raw) >0 {
+				blockTime = gjson.Get(args.Raw, "now").Uint()
 			}
 		}
 
@@ -78,10 +78,10 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 		from := ""          //来源地址
 		to := ""            //目标地址
 		amountStr := ""     //金额
-		args := gjson.Get(extrinsic.Raw, "args").Array()
-		if len(args) == 2 {
-			argsTo = args[0].String()
-			argsAmountStr = args[1].String()
+		args := gjson.Get(extrinsic.Raw, "args")
+		if len(args.Raw) >0 {
+			argsTo = gjson.Get(args.Raw, "dest").String()
+			argsAmountStr = gjson.Get(args.Raw, "value").String()
 		}
 
 		for _, event := range gjson.Get(extrinsic.Raw, "events").Array() {

@@ -38,6 +38,7 @@ type Client struct {
 	AccessToken string
 	Debug       bool
 	client      *req.Req
+	Symbol      string
 }
 
 type Response struct {
@@ -48,7 +49,7 @@ type Response struct {
 	Id      string      `json:"id,omitempty"`
 }
 
-func NewClient(url string /*token string,*/, debug bool) *Client {
+func NewClient(url string /*token string,*/, debug bool, symbol string) *Client {
 	c := Client{
 		BaseURL: url,
 		//	AccessToken: token,
@@ -59,6 +60,7 @@ func NewClient(url string /*token string,*/, debug bool) *Client {
 	//trans, _ := api.Client().Transport.(*http.Transport)
 	//trans.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	c.client = api
+	c.Symbol = symbol
 
 	return &c
 }
