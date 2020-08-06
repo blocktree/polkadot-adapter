@@ -139,7 +139,7 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 
 	fee := uint64(0)
 	if len(rawTx.FeeRate) > 0 {
-		fee = convertFromAmount(rawTx.FeeRate)
+		fee = convertFromAmount(rawTx.FeeRate, decoder.wm.Decimal())
 	} else {
 		fee = uint64(decoder.wm.Config.FixedFee)
 	}
@@ -152,7 +152,7 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	}
 	// keySignList := make([]*openwallet.KeySignature, 1, 1)
 
-	amount := uint64(int64(convertFromAmount(amountStr)))
+	amount := uint64(int64(convertFromAmount(amountStr, decoder.wm.Decimal())))
 
 	from := ""
 	fromPub := ""
@@ -175,9 +175,9 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	rawTx.TxTo = []string{to}
 	rawTx.SetExtParam("nonce", nonceMap)
 	rawTx.TxAmount = amountStr
-	onChainFee, _ := math.SafeAdd(fee, convertFromAmount("0.01"))
-	rawTx.Fees = convertToAmount(onChainFee) //strconv.FormatUint(fee, 10)	//链上实际收取的，加上0.01的固定消耗
-	rawTx.FeeRate = convertToAmount(fee)     //strconv.FormatUint(fee, 10)
+	onChainFee, _ := math.SafeAdd(fee, convertFromAmount("0.01", decoder.wm.Decimal()))
+	rawTx.Fees = convertToAmount(onChainFee, decoder.wm.Decimal()) //strconv.FormatUint(fee, 10)	//链上实际收取的，加上0.01的固定消耗
+	rawTx.FeeRate = convertToAmount(fee, decoder.wm.Decimal())     //strconv.FormatUint(fee, 10)
 
 	mostHeightBlock, err := decoder.wm.ApiClient.getMostHeightBlock()
 	if err != nil {
@@ -291,7 +291,7 @@ func (decoder *TransactionDecoder) VerifyDOTRawTransaction(wrapper openwallet.Wa
 
 func (decoder *TransactionDecoder) GetRawTransactionFeeRate() (feeRate string, unit string, err error) {
 	rate := uint64(decoder.wm.Config.FixedFee)
-	return convertToAmount(rate), "TX", nil
+	return convertToAmount(rate, decoder.wm.Decimal()), "TX", nil
 }
 
 //CreateSummaryRawTransaction 创建汇总交易，返回原始交易单数组
@@ -308,8 +308,8 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 	var (
 		rawTxArray      = make([]*openwallet.RawTransaction, 0)
 		accountID       = sumRawTx.Account.AccountID
-		minTransfer     = big.NewInt(int64(convertFromAmount(sumRawTx.MinTransfer)))
-		retainedBalance = big.NewInt(int64(convertFromAmount(sumRawTx.RetainedBalance)))
+		minTransfer     = big.NewInt(int64(convertFromAmount(sumRawTx.MinTransfer, decoder.wm.Decimal())))
+		retainedBalance = big.NewInt(int64(convertFromAmount(sumRawTx.RetainedBalance, decoder.wm.Decimal())))
 	)
 
 	if minTransfer.Cmp(retainedBalance) < 0 {
@@ -344,7 +344,7 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 	for _, addrBalance := range addrBalanceArray {
 
 		//检查余额是否超过最低转账
-		addrBalance_BI := big.NewInt(int64(convertFromAmount(addrBalance.Balance)))
+		addrBalance_BI := big.NewInt(int64(convertFromAmount(addrBalance.Balance, decoder.wm.Decimal())))
 
 		if addrBalance_BI.Cmp(minTransfer) < 0 {
 			continue
@@ -357,7 +357,7 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 		//计算手续费
 		feeInt := uint64(0)
 		if len(sumRawTx.FeeRate) > 0 {
-			feeInt = convertFromAmount(sumRawTx.FeeRate)
+			feeInt = convertFromAmount(sumRawTx.FeeRate, decoder.wm.Decimal())
 		} else {
 			feeInt = uint64(decoder.wm.Config.FixedFee)
 		}
@@ -372,8 +372,8 @@ func (decoder *TransactionDecoder) CreateSimpleSummaryRawTransaction(wrapper ope
 			return nil, errors.New("The summary address [" + sumRawTx.SummaryAddress + "] 保留余额不足!")
 		}
 
-		sumAmount := convertToAmount(sumAmount_BI.Uint64())
-		fees := convertToAmount(fee.Uint64())
+		sumAmount := convertToAmount(sumAmount_BI.Uint64(), decoder.wm.Decimal())
+		fees := convertToAmount(fee.Uint64(), decoder.wm.Decimal())
 
 		decoder.wm.Log.Debug(
 			"address : ", addrBalance.Address,
@@ -411,7 +411,7 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 
 	fee := uint64(0)
 	if len(rawTx.FeeRate) > 0 {
-		fee = convertFromAmount(rawTx.FeeRate)
+		fee = convertFromAmount(rawTx.FeeRate, decoder.wm.Decimal())
 	} else {
 		fee = uint64(decoder.wm.Config.FixedFee)
 	}
@@ -423,7 +423,7 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 		break
 	}
 
-	amount := uint64(convertFromAmount(amountStr))
+	amount := uint64(convertFromAmount(amountStr, decoder.wm.Decimal()))
 	from := addrBalance.Address
 	fromAddr, err := wrapper.GetAddress(from)
 	if err != nil {
@@ -433,9 +433,9 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 	rawTx.TxFrom = []string{from}
 	rawTx.TxTo = []string{to}
 	rawTx.TxAmount = amountStr
-	onChainFee, _ := math.SafeAdd(fee, convertFromAmount("0.01"))
-	rawTx.Fees = convertToAmount(onChainFee) //strconv.FormatUint(fee, 10)	//链上实际收取的，加上0.01的固定消耗
-	rawTx.FeeRate = convertToAmount(fee)     //strconv.FormatUint(fee, 10)
+	onChainFee, _ := math.SafeAdd(fee, convertFromAmount("0.01", decoder.wm.Decimal()))
+	rawTx.Fees = convertToAmount(onChainFee, decoder.wm.Decimal()) //strconv.FormatUint(fee, 10)	//链上实际收取的，加上0.01的固定消耗
+	rawTx.FeeRate = convertToAmount(fee, decoder.wm.Decimal())     //strconv.FormatUint(fee, 10)
 
 	addrNodeBalance, err := decoder.wm.ApiClient.getBalance(from, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
 	if err != nil {

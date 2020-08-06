@@ -107,7 +107,7 @@ func (wm *WalletManager) Symbol() string {
 
 //小数位精度
 func (wm *WalletManager) Decimal() int32 {
-	return 12
+	return wm.Config.Decimal
 }
 
 //AddressDecode 地址解析器
@@ -158,6 +158,13 @@ func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
 	wm.Config.FixedFee, _ = c.Int64("fixedFee")
 	wm.Config.ReserveAmount, _ = c.Int64("reserveAmount")
 	wm.Config.IgnoreReserve, _ = c.Bool("ignoreReserve")
+
+	decimalInt, err := c.Int("decimal")
+	if err!=nil {
+		decimalInt = 12
+	}
+	wm.Config.Decimal = int32(decimalInt)
+
 	wm.Config.DataDir = c.String("dataDir")
 
 	//数据文件夹

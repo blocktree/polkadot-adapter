@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/asdine/storm"
+	"github.com/ethereum/go-ethereum/common/math"
 	"strconv"
 	"strings"
 
@@ -497,18 +498,21 @@ func (bs *DOTBlockScanner) ExtractTransaction(blockHeight uint64, blockHash stri
 }
 
 // 从最小单位的 amount 转为带小数点的表示
-func convertToAmount(amount uint64) string {
+func convertToAmount(amount uint64, amountDecimal int32) string {
 	amountStr := fmt.Sprintf("%d", amount)
 	d, _ := decimal.NewFromString(amountStr)
-	w, _ := decimal.NewFromString("1000000000000")
+	ten := math.BigPow(10, int64(amountDecimal) )
+	w, _ := decimal.NewFromString(ten.String())
+
 	d = d.Div(w)
 	return d.String()
 }
 
 // amount 字符串转为最小单位的表示
-func convertFromAmount(amountStr string) uint64 {
+func convertFromAmount(amountStr string, amountDecimal int32) uint64 {
 	d, _ := decimal.NewFromString(amountStr)
-	w, _ := decimal.NewFromString("1000000000000")
+	ten := math.BigPow(10, int64(amountDecimal) )
+	w, _ := decimal.NewFromString(ten.String())
 	d = d.Mul(w)
 	r, _ := strconv.ParseInt(d.String(), 10, 64)
 	return uint64(r)
@@ -560,7 +564,7 @@ func (bs *DOTBlockScanner) InitExtractResult(sourceKey string, tx *Transaction, 
 	status := "1"
 	reason := ""
 
-	amount_dec, _ := decimal.NewFromString(convertToAmount(tx.Amount))
+	amount_dec, _ := decimal.NewFromString(convertToAmount(tx.Amount, bs.wm.Decimal()))
 	amount := amount_dec.Abs().String()
 
 	coin := openwallet.Coin{
@@ -572,7 +576,7 @@ func (bs *DOTBlockScanner) InitExtractResult(sourceKey string, tx *Transaction, 
 	to := tx.To
 
 	transx := &openwallet.Transaction{
-		Fees:        convertToAmount(tx.Fee),
+		Fees:        convertToAmount(tx.Fee, bs.wm.Decimal()),
 		Coin:        coin,
 		BlockHash:   result.BlockHash,
 		BlockHeight: result.BlockHeight,
@@ -961,7 +965,7 @@ func (bs *DOTBlockScanner) GetBalanceByAddress(address ...string) ([]*openwallet
 		addrsBalance = append(addrsBalance, &openwallet.Balance{
 			Symbol:  bs.wm.Symbol(),
 			Address: addr,
-			Balance: convertToAmount(uint64(balance.Balance.Int64())),
+			Balance: convertToAmount(uint64(balance.Balance.Int64()), bs.wm.Decimal()),
 		})
 	}
 

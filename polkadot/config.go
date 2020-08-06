@@ -73,8 +73,6 @@ type WalletConfig struct {
 	DefaultConfig string
 	//曲线类型
 	CurveType uint32
-	//小数位长度
-	CoinDecimal decimal.Decimal
 	//fixed fee in sawi
 	FixedFee int64
 	// reserve amount in smallest unit
@@ -89,6 +87,7 @@ type WalletConfig struct {
 	SpecVersion uint32
 
 	AddrPrefix byte
+	Decimal int32
 }
 
 func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion uint32, AddrPrefix byte) *WalletConfig {
@@ -125,8 +124,6 @@ func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion 
 	c.SumAddress = ""
 	//汇总执行间隔时间
 	c.CycleSeconds = time.Second * 10
-	//小数位长度
-	c.CoinDecimal = decimal.NewFromFloat(100000000)
 
 	//默认配置内容
 	c.DefaultConfig = `
