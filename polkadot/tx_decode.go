@@ -275,7 +275,7 @@ func (decoder *TransactionDecoder) VerifyDOTRawTransaction(wrapper openwallet.Wa
 		}
 	}
 
-	signedTrans, pass := polkadotTransaction.VerifyAndCombineTransaction(emptyTrans, signature)
+	signedTrans, pass := polkadotTransaction.VerifyAndCombineTransaction( decoder.GetTransferCode() , emptyTrans, signature)
 
 	if pass {
 		log.Debug("transaction verify passed")
@@ -543,5 +543,15 @@ func (decoder *TransactionDecoder) CreateEmptyRawTransactionAndMessage(fromPub s
 		//TransactionVersion
 		TxVersion : txVersion,
 	}
-	return tx.CreateEmptyTransactionAndMessage()
+
+	return tx.CreateEmptyTransactionAndMessage( decoder.GetTransferCode() )
+}
+
+func (decoder *TransactionDecoder) GetTransferCode() string {
+	transferCode := polkadotTransaction.DOT_Balannce_Transfer
+	if decoder.wm.Config.Symbol == "KSM" {
+		transferCode = polkadotTransaction.KSM_Balannce_Transfer
+	}
+
+	return transferCode
 }

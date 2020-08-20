@@ -67,6 +67,8 @@ func (bs *DOTBlockScanner) SaveLocalBlock(blockHeader *Block) error {
 		Symbol:            bs.wm.Symbol(),
 	}
 
+	//bs.wm.Log.Std.Info("block scanner Save Local Block: %v", header)
+
 	return bs.BlockchainDAI.SaveLocalBlockHead(header)
 }
 
