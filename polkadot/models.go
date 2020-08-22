@@ -23,6 +23,8 @@ import (
 	"time"
 )
 
+const BATCH_CHARGE_TO_TAG  = "batch_charge"
+
 type Block struct {
 	Hash          string        `json:"block"`         // actually block signature in XRP chain
 	PrevBlockHash string        `json:"previousBlock"` // actually block signature in DOT chain
@@ -41,6 +43,8 @@ type Transaction struct {
 	BlockHeight uint64
 	BlockHash   string
 	Status      string
+	ToArr       []string //@required 格式："地址":"数量"
+	ToDecArr    []string //@required 格式："地址":"数量(带小数)"
 }
 
 func GetTransactionInBlock(json *gjson.Result) []Transaction {
@@ -55,6 +59,7 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 		method := gjson.Get(extrinsic.Raw, "method").String()
 		success := gjson.Get(extrinsic.Raw, "success").Bool()
 		//fmt.Println("method : ", method, ", success : ", success)
+		hasUtilityComplete := false
 
 		if !success {
 			continue
@@ -66,6 +71,134 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 			if len(args.Raw) >0 {
 				blockTime = gjson.Get(args.Raw, "now").Uint()
 			}
+		}
+
+		//解析批量转账
+		if method == "utility.batch" {
+
+			txid := gjson.Get(extrinsic.Raw, "hash").String()
+
+			toArr := make([]string, 0)
+			toAmount := uint64(0)
+			batchTransaction := make([]Transaction, 0)
+
+			args := gjson.Get(extrinsic.Raw, "args")
+			if len(args.Raw) >0 {
+				calls := gjson.Get(args.Raw, "calls")
+				if len(calls.Raw) >0 {
+					for _, callItem := range calls.Array() {
+						if gjson.Get(callItem.Raw, "method").String() == "balances.transfer" {	//在交易体，发现转账方法
+
+							callIndex := gjson.Get(callItem.Raw, "callIndex")
+							callIndex0 := gjson.Get(callIndex.Raw, "0")
+							if len(callIndex0.Raw)>0 {
+								if callIndex0.String() != "5" {
+									continue
+								}
+							}
+							callIndex1 := gjson.Get(callIndex.Raw, "1")
+							if len(callIndex1.Raw)>0 {
+								if callIndex1.String() != "0" {
+									continue
+								}
+							}
+
+							dest := ""
+							value := ""
+							callArgs := gjson.Get(callItem.Raw, "args")
+							if len(callArgs.Raw)>0 {
+								dest = gjson.Get(callArgs.Raw, "dest").String()
+								value = gjson.Get(callArgs.Raw, "value").String()
+							}
+
+							amountInt, err := strconv.ParseInt(value, 10, 64)
+							if err == nil {
+								amount := uint64(amountInt)
+								transaction := Transaction{
+									TxID:        txid,
+									TimeStamp:   blockTime,
+									From:        "",
+									To:          dest,
+									Amount:      amount,
+									BlockHeight: blockHeight,
+									BlockHash:   blockHash,
+									Status:      "-1",
+								}
+
+								batchTransaction = append(batchTransaction, transaction)
+							}
+						}
+					}
+				}
+			}
+
+			for _, event := range gjson.Get(extrinsic.Raw, "events").Array() {
+				if gjson.Get(event.Raw, "method").String() == "utility.BatchCompleted" {	//事件是否执行完成
+					hasUtilityComplete = true
+				}
+				if gjson.Get(event.Raw, "method").String() == "balances.Transfer" {
+					data := gjson.Get(event.Raw, "data").Array()
+					if len(data) == 3 {
+						from := data[0].String()
+						to := data[1].String()
+						amountStr := data[2].String()
+
+						for batchTransactionIndex, batchTransactionItem := range batchTransaction {
+							if batchTransactionItem.Status == "-1" { //未被认定
+								if batchTransactionItem.To == to { //转入地址与传入参数对得上
+									amountInt, err := strconv.ParseInt(amountStr, 10, 64)
+									if err == nil {
+										amount := uint64(amountInt)
+										if batchTransactionItem.Amount == amount { //金额与传入参数对得上
+											batchTransaction[batchTransactionIndex].From = from
+											toArr = append(toArr, to+":"+amountStr)
+											toAmount, _ = math.SafeAdd(toAmount, amount)
+											batchTransaction[batchTransactionIndex].Status = "1"
+
+											break
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if hasUtilityComplete==false{
+				continue
+			}
+
+			fee := uint64(0)
+
+			tip := uint64(gjson.Get(extrinsic.Raw, "tip").Uint())
+
+			info := gjson.Get(extrinsic.Raw, "info")
+			if info.Exists() {
+				partialFee := uint64(gjson.Get(info.Raw, "partialFee").Uint())
+
+				fee, _ = math.SafeAdd(tip, partialFee)
+			}
+
+			for _, batchTransactionItem := range batchTransaction {
+				transaction := Transaction{
+					TxID:        batchTransactionItem.TxID,
+					Fee:         fee,
+					TimeStamp:   batchTransactionItem.TimeStamp,
+					From:        batchTransactionItem.From,
+					To:          BATCH_CHARGE_TO_TAG,
+					Amount:      toAmount,
+					BlockHeight: batchTransactionItem.BlockHeight,
+					BlockHash:   batchTransactionItem.BlockHash,
+					Status:      batchTransactionItem.Status,
+					ToArr:       toArr,
+				}
+
+				transactions = append(transactions, transaction)
+				break
+			}
+
+			continue
 		}
 
 		if method != "balances.transfer" && method != "claims.attest" { //不是这个method的全部不要
