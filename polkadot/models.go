@@ -133,9 +133,9 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 			}
 
 			for _, event := range gjson.Get(extrinsic.Raw, "events").Array() {
-				if gjson.Get(event.Raw, "method").String() == "utility.BatchCompleted" {	//事件是否执行完成
-					hasUtilityComplete = true
-				}
+				//if gjson.Get(event.Raw, "method").String() == "utility.BatchCompleted" {	//事件是否执行完成
+				//	hasUtilityComplete = true
+				//}
 				if gjson.Get(event.Raw, "method").String() == "balances.Transfer" {
 					data := gjson.Get(event.Raw, "data").Array()
 					if len(data) == 3 {
