@@ -59,7 +59,7 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 		method := gjson.Get(extrinsic.Raw, "method").String()
 		success := gjson.Get(extrinsic.Raw, "success").Bool()
 		//fmt.Println("method : ", method, ", success : ", success)
-		hasUtilityComplete := false
+		//hasUtilityComplete := false
 
 		if !success {
 			continue
@@ -165,9 +165,9 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 				}
 			}
 
-			if hasUtilityComplete==false{
-				continue
-			}
+			//if hasUtilityComplete==false{
+			//	continue
+			//}
 
 			fee := uint64(0)
 
