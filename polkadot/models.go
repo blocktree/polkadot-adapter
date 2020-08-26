@@ -201,7 +201,7 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 			continue
 		}
 
-		if method != "balances.transfer" && method != "claims.attest" { //不是这个method的全部不要
+		if method != "balances.transfer" && method != "claims.attest" && method != "balances.transferKeepAlive" { //不是这个method的全部不要
 			continue
 		}
 
