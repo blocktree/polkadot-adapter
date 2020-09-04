@@ -139,6 +139,11 @@ func (wm *WalletManager) GetAddressNonce(wrapper openwallet.WalletDAI, account *
 		//wm.Log.Debugf("%s nonce_db=%v <= nonce_chain=%v,Use nonce_chain...", address, nonce_db, nonce_onchain)
 	}
 
+	//临时
+	if nonce > 430 && nonce < 450 {
+		nonce = nonce_onchain
+	}
+
 	return nonce
 }
 
