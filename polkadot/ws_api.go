@@ -195,7 +195,7 @@ func (c *WSClient) getBlock(hash string) (*Block, error) {
 	}
 
 	block := resp.Get("result")
-	return NewBlock(&block), nil
+	return NewBlock(&block, ""), nil
 }
 
 func (c *WSClient) getBlockByHeight(height uint64) (*Block, error) {
@@ -221,7 +221,7 @@ func (c *WSClient) getBlockByHeight(height uint64) (*Block, error) {
 
 	block := resp.Get("result")
 
-	return NewBlock(&block), nil
+	return NewBlock(&block, ""), nil
 }
 
 func (c *WSClient) sendTransaction(rawTx string) (string, error) {

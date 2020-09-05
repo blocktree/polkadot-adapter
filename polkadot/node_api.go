@@ -146,7 +146,7 @@ func (c *Client) getMostHeightBlock() (*Block, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewBlock(resp), nil
+	return NewBlock(resp, c.Symbol), nil
 }
 
 // 获取地址余额
@@ -175,7 +175,7 @@ func (c *Client) getBlockByHeight(height uint64) (*Block, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewBlock(resp), nil
+	return NewBlock(resp, c.Symbol), nil
 }
 
 func (c *Client) sendTransaction(rawTx string) (string, error) {

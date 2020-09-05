@@ -47,7 +47,7 @@ type Transaction struct {
 	ToDecArr    []string //@required 格式："地址":"数量(带小数)"
 }
 
-func GetTransactionInBlock(json *gjson.Result) []Transaction {
+func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 	blockHash := gjson.Get(json.Raw, "hash").String()
 	blockHeight := gjson.Get(json.Raw, "number").Uint()
 	transactions := make([]Transaction, 0)
@@ -92,7 +92,11 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 							callIndex := gjson.Get(callItem.Raw, "callIndex")
 							callIndex0 := gjson.Get(callIndex.Raw, "0")
 							if len(callIndex0.Raw)>0 {
-								if callIndex0.String() != "5" {
+								if callIndex0.String() == "5" && symbol=="DOT"{
+
+								}else if callIndex0.String() == "4" && symbol=="KSM"{
+
+								}else{
 									continue
 								}
 							}
@@ -287,13 +291,13 @@ func GetTransactionInBlock(json *gjson.Result) []Transaction {
 	return transactions
 }
 
-func NewBlock(json *gjson.Result) *Block {
+func NewBlock(json *gjson.Result, symbol string) *Block {
 	obj := &Block{}
 	// 解析
 	obj.Hash = gjson.Get(json.Raw, "hash").String()
 	obj.PrevBlockHash = gjson.Get(json.Raw, "parentHash").String()
 	obj.Height = gjson.Get(json.Raw, "number").Uint()
-	obj.Transactions = GetTransactionInBlock(json)
+	obj.Transactions = GetTransactionInBlock(json, symbol)
 
 	if obj.Hash == "" {
 		time.Sleep(5 * time.Second)
