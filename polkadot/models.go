@@ -57,9 +57,17 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 
 	for _, extrinsic := range gjson.Get(json.Raw, "extrinsics").Array() {
 		//fmt.Println("extrinsic : " , extrinsic)
-		method := gjson.Get(extrinsic.Raw, "method").String()
 		success := gjson.Get(extrinsic.Raw, "success").Bool()
-		//fmt.Println("method : ", method, ", success : ", success)
+		method := ""
+		pallet := ""
+
+		methodJSON := gjson.Get(extrinsic.Raw, "method")
+		if methodJSON.Exists() {
+			method = gjson.Get(methodJSON.Raw, "method").String()
+			pallet = gjson.Get(methodJSON.Raw, "pallet").String()
+		}
+
+		//log.Debug("pallet : ", pallet, "method : ", method,", success : ", success)
 		//hasUtilityComplete := false
 
 		if !success {
@@ -67,7 +75,7 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 		}
 
 		//获取这个区块的时间
-		if method == "timestamp.set" {
+		if pallet == "timestamp" && method=="set" {
 			args := gjson.Get(extrinsic.Raw, "args")
 			if len(args.Raw) >0 {
 				blockTime = gjson.Get(args.Raw, "now").Uint()
@@ -75,7 +83,7 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 		}
 
 		//解析批量转账
-		if method == "utility.batch" {
+		if pallet == "utility" && method=="batch" {
 
 			txid := gjson.Get(extrinsic.Raw, "hash").String()
 
@@ -88,31 +96,24 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 				calls := gjson.Get(args.Raw, "calls")
 				if len(calls.Raw) >0 {
 					for _, callItem := range calls.Array() {
-						if gjson.Get(callItem.Raw, "method").String() == "balances.transfer" {	//在交易体，发现转账方法
+						callPallet := ""
+						callMethod := ""
+						dest := ""
+						value := ""
 
-							callIndex := gjson.Get(callItem.Raw, "callIndex")
-							callIndex0 := gjson.Get(callIndex.Raw, "0")
-							if len(callIndex0.Raw)>0 {
-								if callIndex0.String() == "5" && symbol=="DOT"{
+						callMethodJSON := gjson.Get(callItem.Raw, "method")
+						if callMethodJSON.Exists() {
+							callPallet = gjson.Get(callMethodJSON.Raw, "pallet").String()
+							callMethod = gjson.Get(callMethodJSON.Raw, "method").String()
+						}
 
-								}else if callIndex0.String() == "4" && symbol=="KSM"{
-
-								}else{
-									continue
-								}
-							}
-							callIndex1 := gjson.Get(callIndex.Raw, "1")
-							if len(callIndex1.Raw)>0 {
-								if callIndex1.String() != "0" {
-									continue
-								}
-							}
-
-							dest := ""
-							value := ""
+						if callPallet=="balances" && callMethod=="transfer" {	//在交易体，发现转账方法
 							callArgs := gjson.Get(callItem.Raw, "args")
-							if len(callArgs.Raw)>0 {
-								dest = gjson.Get(callArgs.Raw, "dest").String()
+							if callArgs.Exists(){
+								callDest := gjson.Get(callArgs.Raw, "dest")
+								if callDest.Exists() {
+									dest = gjson.Get(callDest.Raw, "Id").String()
+								}
 								value = gjson.Get(callArgs.Raw, "value").String()
 							}
 
@@ -138,10 +139,16 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 			}
 
 			for _, event := range gjson.Get(extrinsic.Raw, "events").Array() {
-				//if gjson.Get(event.Raw, "method").String() == "utility.BatchCompleted" {	//事件是否执行完成
-				//	hasUtilityComplete = true
-				//}
-				if gjson.Get(event.Raw, "method").String() == "balances.Transfer" {
+				eventPallet := ""
+				eventMethod := ""
+
+				eventMethodJSON := gjson.Get(event.Raw, "method")
+				if eventMethodJSON.Exists() {
+					eventPallet = gjson.Get(eventMethodJSON.Raw, "pallet").String()
+					eventMethod = gjson.Get(eventMethodJSON.Raw, "method").String()
+				}
+
+				if eventPallet=="balances" && eventMethod=="Transfer" {
 					data := gjson.Get(event.Raw, "data").Array()
 					if len(data) == 3 {
 						from := data[0].String()
@@ -206,7 +213,17 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 			continue
 		}
 
-		if method != "balances.transfer" && method != "claims.attest" && method != "balances.transferKeepAlive" { //不是这个method的全部不要
+		isContinue := false
+		if pallet == "balances" && method=="transfer" {
+			isContinue = true
+		}
+		if pallet == "claims" && method=="attest" {
+			isContinue = true
+		}
+		if pallet == "balances" && method=="transferKeepAlive" {
+			isContinue = true
+		}
+		if !isContinue { //不是这个method的全部不要
 			continue
 		}
 
@@ -217,12 +234,21 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 		amountStr := ""     //金额
 		args := gjson.Get(extrinsic.Raw, "args")
 		if len(args.Raw) >0 {
-			argsTo = gjson.Get(args.Raw, "dest").String()
+			//argsTo = gjson.Get(args.Raw, "dest").String()
+			dest := gjson.Get(args.Raw, "dest")
+			if dest.Exists() {
+				argsTo = gjson.Get(dest.Raw, "Id").String()
+			}
 			argsAmountStr = gjson.Get(args.Raw, "value").String()
 		}
 
 		for _, event := range gjson.Get(extrinsic.Raw, "events").Array() {
-			if gjson.Get(event.Raw, "method").String() == "balances.Transfer" {
+
+			eventMethodJSON := gjson.Get(event.Raw, "method")
+			eventPallet := gjson.Get(eventMethodJSON.Raw, "pallet").String()
+			eventMethod := gjson.Get(eventMethodJSON.Raw, "method").String()
+
+			if eventPallet=="balances" && eventMethod=="Transfer" {
 				data := gjson.Get(event.Raw, "data").Array()
 				if len(data) == 3 {
 					from = data[0].String()
@@ -246,10 +272,10 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 		if argsAmountStr == "" && amountStr == "" { //没有取到值
 			continue
 		}
-		if method == "balances.transfer" && argsTo != to { //值不一样
+		if pallet == "balances" && method == "transfer" && argsTo != to { //值不一样
 			continue
 		}
-		if method == "balances.transfer" && argsAmountStr != amountStr { //值不一样
+		if pallet == "balances" && method == "transfer" && argsAmountStr != amountStr { //值不一样
 			continue
 		}
 
