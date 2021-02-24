@@ -17,9 +17,13 @@ package polkadot
 
 import (
 	"errors"
-	"path/filepath"
-
 	"github.com/blocktree/openwallet/v2/common"
+	"github.com/ethereum/go-ethereum/common/math"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/blocktree/openwallet/v2/hdkeystore"
 	"github.com/blocktree/openwallet/v2/log"
 	"github.com/blocktree/openwallet/v2/openwallet"
@@ -124,7 +128,23 @@ func (wm *WalletManager) GetAddressNonce(wrapper openwallet.WalletDAI, account *
 	if nonce_db == nil {
 		nonce = 0
 	} else {
-		nonce = common.NewString(nonce_db).UInt64()
+		//nonce = common.NewString(nonce_db).UInt64()
+		nonceStr := common.NewString(nonce_db)
+		nonceStrArr := strings.Split(string(nonceStr), "_")
+
+		if len(nonceStrArr)>1 {
+			saveTime := common.NewString(nonceStrArr[1]).UInt64()
+			now := uint64(time.Now().Unix())
+			diff, _ := math.SafeSub(now, saveTime)
+
+			if diff > wm.Config.NonceDiff { //当前时间减去保存时间，超过1小时，就不算了
+				nonce = 0
+			} else {
+				nonce = common.NewString(nonceStrArr[0]).UInt64()
+			}
+		}else{
+			nonce = common.NewString(nonce_db).UInt64()
+		}
 	}
 
 	nonce_onchain = account.Nonce
@@ -150,8 +170,11 @@ func (wm *WalletManager) GetAddressNonce(wrapper openwallet.WalletDAI, account *
 // UpdateAddressNonce
 func (wm *WalletManager) UpdateAddressNonce(wrapper openwallet.WalletDAI, address string, nonce uint64) {
 	key := wm.Symbol() + "-nonce"
-	wm.Log.Info(address, " set nonce ", nonce)
-	err := wrapper.SetAddressExtParam(address, key, nonce)
+
+	nonceStr := strconv.FormatUint(nonce, 10) + "_" + strconv.FormatUint( uint64(time.Now().Unix()), 10)
+	wm.Log.Info(address, " set nonce ", nonceStr)
+
+	err := wrapper.SetAddressExtParam(address, key, nonceStr)
 	if err != nil {
 		wm.Log.Errorf("WalletDAI SetAddressExtParam failed, err: %v", err)
 	}

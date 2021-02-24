@@ -88,6 +88,8 @@ type WalletConfig struct {
 
 	AddrPrefix byte
 	Decimal int32
+
+	NonceDiff uint64
 }
 
 func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion uint32, AddrPrefix byte) *WalletConfig {

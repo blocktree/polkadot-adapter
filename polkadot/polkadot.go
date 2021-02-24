@@ -170,6 +170,12 @@ func (wm *WalletManager) LoadAssetsConfig(c config.Configer) error {
 	//数据文件夹
 	wm.Config.makeDataDir()
 
+	nonceDiffInt, err := c.Int64("nonceDiff")
+	if err!=nil {
+		nonceDiffInt = 3600
+	}
+	wm.Config.NonceDiff = uint64(nonceDiffInt)
+
 	return nil
 }
 

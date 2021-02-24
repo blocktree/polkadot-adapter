@@ -1016,7 +1016,7 @@ func (bs *DOTBlockScanner) GetBalanceByAddress(address ...string) ([]*openwallet
 
 	for _, addr := range address {
 
-		balance, err := bs.wm.ApiClient.getBalance(addr, bs.wm.Config.IgnoreReserve, bs.wm.Config.ReserveAmount)
+		balance, err := bs.wm.ApiClient.getBalance(addr)
 
 		if err != nil {
 			return nil, err

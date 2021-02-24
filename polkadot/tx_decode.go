@@ -122,7 +122,7 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 	addressesBalanceList := make([]AddrBalance, 0, len(addresses))
 
 	for i, addr := range addresses {
-		balance, err := decoder.wm.ApiClient.getBalance(addr.Address, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
+		balance, err := decoder.wm.ApiClient.getBalance(addr.Address)
 		if err != nil {
 			return err
 		}
@@ -437,7 +437,7 @@ func (decoder *TransactionDecoder) createRawTransaction(wrapper openwallet.Walle
 	rawTx.Fees = convertToAmount(onChainFee, decoder.wm.Decimal()) //strconv.FormatUint(fee, 10)	//链上实际收取的，加上0.01的固定消耗
 	rawTx.FeeRate = convertToAmount(fee, decoder.wm.Decimal())     //strconv.FormatUint(fee, 10)
 
-	addrNodeBalance, err := decoder.wm.ApiClient.getBalance(from, decoder.wm.Config.IgnoreReserve, decoder.wm.Config.ReserveAmount)
+	addrNodeBalance, err := decoder.wm.ApiClient.getBalance(from)
 	if err != nil {
 		return errors.New("Failed to get nonce when create summay transaction!")
 	}

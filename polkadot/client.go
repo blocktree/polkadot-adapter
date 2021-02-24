@@ -55,16 +55,16 @@ func (c *ApiClient) getMostHeightBlock() (*Block, error) {
 }
 
 // 获取地址余额
-func (c *ApiClient) getBalance(address string, ignoreReserve bool, reserveAmount int64) (*AddrBalance, error) {
+func (c *ApiClient) getBalance(address string) (*AddrBalance, error) {
 	var (
 		balance *AddrBalance
 		err     error
 	)
 
 	if c.APIChoose == "rpc" {
-		balance, err = c.Client.getBalance(address, ignoreReserve, reserveAmount)
+		balance, err = c.Client.getBalance(address)
 	} else if c.APIChoose == "ws" {
-		balance, err = c.WSClient.getBalance(address, ignoreReserve, reserveAmount)
+		balance, err = c.WSClient.getBalance(address)
 	}
 
 	return balance, err

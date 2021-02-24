@@ -56,6 +56,8 @@ func NewClient(url string /*token string,*/, debug bool, symbol string) *Client 
 		Debug: debug,
 	}
 
+	log.Debug("BaseURL : ", url)
+
 	api := req.New()
 	//trans, _ := api.Client().Transport.(*http.Transport)
 	//trans.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -131,7 +133,8 @@ func (c *Client) getBlockHeight() (uint64, error) {
 
 // 获取当前最高区块
 func (c *Client) getTxArtifacts() (*TxArtifacts, error) {
-	resp, err := c.GetCall("/tx/artifacts/")
+	//resp, err := c.GetCall("/tx/artifacts/")
+	resp, err := c.GetCall("/transaction/material")
 
 	if err != nil {
 		return nil, err
@@ -141,7 +144,7 @@ func (c *Client) getTxArtifacts() (*TxArtifacts, error) {
 
 //获取当前最新高度
 func (c *Client) getMostHeightBlock() (*Block, error) {
-	resp, err := c.GetCall("/block/")
+	resp, err := c.GetCall("/blocks/head")
 
 	if err != nil {
 		return nil, err
@@ -150,8 +153,8 @@ func (c *Client) getMostHeightBlock() (*Block, error) {
 }
 
 // 获取地址余额
-func (c *Client) getBalance(address string, ignoreReserve bool, reserveAmount int64) (*AddrBalance, error) {
-	r, err := c.GetCall("/balance/" + address)
+func (c *Client) getBalance(address string) (*AddrBalance, error) {
+	r, err := c.GetCall("/accounts/"+address+"/balance-info")
 
 	if err != nil {
 		return nil, err
@@ -170,7 +173,7 @@ func (c *Client) getBalance(address string, ignoreReserve bool, reserveAmount in
 }
 
 func (c *Client) getBlockByHeight(height uint64) (*Block, error) {
-	resp, err := c.GetCall("/block/" + strconv.FormatUint(height, 10))
+	resp, err := c.GetCall("/blocks/" + strconv.FormatUint(height, 10))
 
 	if err != nil {
 		return nil, err
@@ -183,7 +186,8 @@ func (c *Client) sendTransaction(rawTx string) (string, error) {
 		"tx": rawTx,
 	}
 
-	resp, err := c.PostCall("/tx", body)
+	//resp, err := c.PostCall("/tx", body)
+	resp, err := c.PostCall("/transaction", body)
 	if err != nil {
 		return "", err
 	}
