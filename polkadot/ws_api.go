@@ -39,6 +39,32 @@ import (
 //    return &ret, nil
 //}
 
+func (c *WSClient) test() (error) {
+
+	request := map[string]interface{}{
+		//"id" : 14,
+		//"command":"ledger",
+		"ledger_index": "validated",
+		"accounts":     false,
+		"full":         false,
+		"transactions": false,
+		"expand":       false,
+		"owner_funds":  false,
+	}
+
+	resp, err := c.Call("/public/ws", request)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.Get("error").String() != "" {
+		return errors.New(resp.Get("error").String())
+	}
+
+	return nil
+}
+
 func (c *WSClient) getBlockHeight() (uint64, error) {
 
 	request := map[string]interface{}{
@@ -114,7 +140,7 @@ func (c *WSClient) getSequence(address string) (uint32, error) {
 	return uint32(resp.Get("result").Get("account_data").Get("Sequence").Int()), nil
 }
 
-func (c *WSClient) getBalance(address string, ignoreReserve bool, reserveAmount int64) (*AddrBalance, error) {
+func (c *WSClient) getBalance(address string) (*AddrBalance, error) {
 	request := map[string]interface{}{
 		//"id":           14,
 		//"command":      "account_info",
@@ -138,9 +164,9 @@ func (c *WSClient) getBalance(address string, ignoreReserve bool, reserveAmount 
 		return nil, errors.New(r.Get("error").String())
 	}
 
-	if ignoreReserve {
-		return &AddrBalance{Address: address, Balance: big.NewInt(r.Get("result").Get("account_data").Get("Balance").Int() - reserveAmount), Actived: true}, nil
-	}
+	//if ignoreReserve {
+	//	return &AddrBalance{Address: address, Balance: big.NewInt(r.Get("result").Get("account_data").Get("Balance").Int() - reserveAmount), Actived: true}, nil
+	//}
 
 	return &AddrBalance{Address: address, Balance: big.NewInt(r.Get("result").Get("account_data").Get("Balance").Int()), Actived: true}, nil
 }
