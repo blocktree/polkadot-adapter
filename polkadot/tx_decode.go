@@ -161,6 +161,7 @@ func (decoder *TransactionDecoder) CreateDotRawTransaction(wrapper openwallet.Wa
 		from = a.Address
 		fromPub = addresses[a.index].PublicKey
 		nonce = a.Nonce
+		break
 	}
 
 	if from == "" {
