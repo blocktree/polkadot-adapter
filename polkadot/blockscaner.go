@@ -836,7 +836,7 @@ func (bs *DOTBlockScanner) GetScannedBlockHeader() (*openwallet.BlockHeader, err
 	if blockHeight == 0 {
 		blockHeight, err = bs.wm.GetBlockHeight()
 		if err != nil {
-			bs.wm.Log.Errorf("XRP GetBlockHeight failed,err = %v", err)
+			bs.wm.Log.Errorf("GetBlockHeight failed,err = %v", err)
 			return nil, err
 		}
 

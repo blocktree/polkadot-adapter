@@ -27,7 +27,7 @@ import (
 const BATCH_CHARGE_TO_TAG  = "batch_charge"
 
 type Block struct {
-	Hash          string        `json:"block"`         // actually block signature in XRP chain
+	Hash          string        `json:"block"`         // actually block signature in DOT chain
 	PrevBlockHash string        `json:"previousBlock"` // actually block signature in DOT chain
 	Timestamp     uint64        `json:"timestamp"`
 	Height        uint64        `json:"height"`

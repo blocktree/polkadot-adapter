@@ -235,13 +235,13 @@ func (ws *WSClient) autoReconnectNode() error {
 		select {
 		case <-ws.reconnect:
 			//重新连接
-			ws.wm.Log.Info("Connecting to XRP node")
+			ws.wm.Log.Info("Connecting to node")
 			err = ws.connectNode()
 			if err != nil {
-				ws.wm.Log.Errorf("Connect XRP node failed unexpected error: %v", err)
+				ws.wm.Log.Errorf("Connect node failed unexpected error: %v", err)
 				ws.disconnected <- struct{}{}
 			} else {
-				ws.wm.Log.Infof("Connect XRP node successfully.")
+				ws.wm.Log.Infof("Connect node successfully.")
 			}
 			//ws.Call("world", nil)
 		case <-ws.disconnected:
