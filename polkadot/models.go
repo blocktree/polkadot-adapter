@@ -15,7 +15,6 @@
 package polkadot
 
 import (
-	"github.com/blocktree/openwallet/v2/log"
 	"github.com/blocktree/openwallet/v2/openwallet"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/tidwall/gjson"
@@ -112,7 +111,7 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 							if callArgs.Exists(){
 								callDest := gjson.Get(callArgs.Raw, "dest")
 								if callDest.Exists() {
-									dest = gjson.Get(callDest.Raw, "Id").String()
+									dest = gjson.Get(callDest.Raw, "id").String()
 								}
 								value = gjson.Get(callArgs.Raw, "value").String()
 							}
@@ -293,7 +292,7 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 		}
 
 		//fmt.Println("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: " ,blockTime, ",fee: ", fee)
-		log.Debug("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: ", blockTime, ",fee: ", fee)
+		//log.Debug("txid : ", txid, ",from: ", from, ",to: ", to, ",amount: ", amountStr, ",time: ", blockTime, ",fee: ", fee)
 
 		amountInt, err := strconv.ParseInt(amountStr, 10, 64)
 		if err == nil {
