@@ -46,7 +46,7 @@ type WalletManager struct {
 
 func NewWalletManager() *WalletManager {
 	wm := WalletManager{}
-	wm.Config = NewConfig(Symbol, MasterKey, GenesisHash, SpecVersion, AddrPrefix)
+	wm.Config = NewConfig(Symbol, MasterKey, AddrPrefix)
 	storage := hdkeystore.NewHDKeystore(wm.Config.keyDir, hdkeystore.StandardScryptN, hdkeystore.StandardScryptP)
 	wm.Storage = storage
 	//参与汇总的钱包

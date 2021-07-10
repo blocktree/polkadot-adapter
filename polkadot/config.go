@@ -31,8 +31,6 @@ const (
 	Symbol      = "DOT"
 	MasterKey   = "Polkadot seed"
 	CurveType   = owcrypt.ECC_CURVE_ED25519
-	GenesisHash = "b0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe"
-	SpecVersion = 1058
 	AddrPrefix = 0x00
 )
 
@@ -82,17 +80,13 @@ type WalletConfig struct {
 	// data directory
 	DataDir string
 
-	GenesisHash string
-
-	SpecVersion uint32
-
 	AddrPrefix byte
 	Decimal int32
 
 	NonceDiff uint64
 }
 
-func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion uint32, AddrPrefix byte) *WalletConfig {
+func NewConfig(symbol string, masterKey string, AddrPrefix byte) *WalletConfig {
 
 	c := WalletConfig{}
 
@@ -100,8 +94,6 @@ func NewConfig(symbol string, masterKey string, GenesisHash string, SpecVersion 
 	c.Symbol = symbol
 	c.MasterKey = masterKey
 	c.CurveType = CurveType
-	c.GenesisHash = GenesisHash
-	c.SpecVersion = SpecVersion
 	c.AddrPrefix = AddrPrefix
 
 	//钥匙备份路径
