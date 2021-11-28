@@ -82,7 +82,7 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 		}
 
 		//解析批量转账
-		if pallet == "utility" && method=="batch" {
+		if (pallet == "utility" && method=="batch") || ( pallet == "utility" && method=="batchAll") {
 
 			txid := gjson.Get(extrinsic.Raw, "hash").String()
 
@@ -137,6 +137,8 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 				}
 			}
 
+			checkCompletedEvent := false		//是否需要检查下一个event是否成功，如果检查到balances.transfer，校验成功，还需要检查之后有无event是否utility.ItemCompleted
+			needCheckIndex := -1
 			for _, event := range gjson.Get(extrinsic.Raw, "events").Array() {
 				eventPallet := ""
 				eventMethod := ""
@@ -145,6 +147,12 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 				if eventMethodJSON.Exists() {
 					eventPallet = gjson.Get(eventMethodJSON.Raw, "pallet").String()
 					eventMethod = gjson.Get(eventMethodJSON.Raw, "method").String()
+				}
+
+				if eventPallet=="utility" && eventMethod=="ItemCompleted" && checkCompletedEvent && needCheckIndex>=0{	//校验成功，重置
+					batchTransaction[needCheckIndex].Status = "1"
+					checkCompletedEvent = false
+					needCheckIndex = -1
 				}
 
 				if eventPallet=="balances" && eventMethod=="Transfer" {
@@ -164,7 +172,13 @@ func GetTransactionInBlock(json *gjson.Result, symbol string) []Transaction {
 											batchTransaction[batchTransactionIndex].From = from
 											toArr = append(toArr, to+":"+amountStr)
 											toAmount, _ = math.SafeAdd(toAmount, amount)
-											batchTransaction[batchTransactionIndex].Status = "1"
+
+											if pallet == "utility" && method=="batchAll" {
+												checkCompletedEvent = true
+												needCheckIndex = batchTransactionIndex
+											}else{
+												batchTransaction[batchTransactionIndex].Status = "1"
+											}
 
 											break
 										}
