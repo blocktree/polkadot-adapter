@@ -9,8 +9,8 @@ require (
 	github.com/blocktree/go-owcrypt v1.1.10
 	github.com/blocktree/openwallet/v2 v2.0.2
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/ethereum/go-ethereum v1.9.9
-	github.com/gorilla/websocket v1.4.1
+	github.com/ethereum/go-ethereum v1.10.17
+	github.com/gorilla/websocket v1.4.2
 	github.com/imroc/req v0.2.4
 	github.com/pborman/uuid v1.2.0
 	github.com/prometheus/common v0.6.0
